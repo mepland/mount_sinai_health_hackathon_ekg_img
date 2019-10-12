@@ -1,4 +1,4 @@
-# Mount Sinai Health Hackathon EKG Imaging
+# Mount Sinai Health Hackathon EKG Imaging Project
 
 ## Summary
 TODO
@@ -6,12 +6,12 @@ TODO
 ## Cloning the Repository
 ssh  
 ```bash
-git clone 
+git clone git@github.com:mepland/mount_sinai_health_hackathon_ekg_img.git
 ```
 
 https  
 ```bash
-git clone 
+git clone https://github.com/mepland/mount_sinai_health_hackathon_ekg_img.git
 ```
 
 ## Installing Dependencies
