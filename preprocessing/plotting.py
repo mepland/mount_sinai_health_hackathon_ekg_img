@@ -76,7 +76,7 @@ def plot_waveform(df, channel_names, m_path='output', fname='waveform', tag='', 
 		axs[ichannel].set_ylabel(channel_name)
 
 		# axs[ichannel].set_ylim([0.,1.])
-
+	plt.tight_layout()
 	if inline:
 		fig.show()
 	else:
