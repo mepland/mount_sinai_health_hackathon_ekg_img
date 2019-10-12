@@ -13089,7 +13089,7 @@ div#notebook {
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># install requirements</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install --upgrade pip
-<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install -r requirements.txt
+<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install -r ../requirements.txt
 </pre></div>
 
     </div>
@@ -13184,7 +13184,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;./data/ptb-diagnostic-ecg-database-1.0.0&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;../data/ptb-diagnostic-ecg-database-1.0.0&#39;</span>
 
 <span class="n">target_channel_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;ii&#39;</span><span class="p">,</span> <span class="s1">&#39;iii&#39;</span><span class="p">,</span> <span class="s1">&#39;avr&#39;</span><span class="p">,</span> <span class="s1">&#39;avl&#39;</span><span class="p">,</span> <span class="s1">&#39;avf&#39;</span><span class="p">,</span> <span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="s1">&#39;v2&#39;</span><span class="p">,</span> <span class="s1">&#39;v3&#39;</span><span class="p">,</span> <span class="s1">&#39;v4&#39;</span><span class="p">,</span> <span class="s1">&#39;v5&#39;</span><span class="p">,</span> <span class="s1">&#39;v6&#39;</span><span class="p">]</span>
 <span class="n">n_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_channel_names</span><span class="p">)</span>

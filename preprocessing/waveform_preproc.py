@@ -9,7 +9,7 @@
 # install requirements
 import sys
 get_ipython().system('{sys.executable} -m pip install --upgrade pip')
-get_ipython().system('{sys.executable} -m pip install -r requirements.txt')
+get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt')
 
 
 # ### Load packages!
@@ -73,7 +73,7 @@ from plotting import * # load plotting code
 # In[4]:
 
 
-data_path = './data/ptb-diagnostic-ecg-database-1.0.0'
+data_path = '../data/ptb-diagnostic-ecg-database-1.0.0'
 
 target_channel_names = ['i', 'ii', 'iii', 'avr', 'avl', 'avf', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6']
 n_channels = len(target_channel_names)
