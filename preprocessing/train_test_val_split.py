@@ -2,6 +2,9 @@ import os
 import re
 import sys
 import glob
+import random
+
+random.seed(3)
 
 os.chdir(sys.argv[1])
 dirs = [dir for dir in os.listdir()]
@@ -20,11 +23,15 @@ for dir in dirs:
     os.mkdir("val/"+dir)
     os.chdir(dir)
     files = os.listdir()
-    files = list(set([re.sub('-.*', '', f) for f in files]))
+    random.shuffle(files) 
+    files = files[0:80]
+
     length = len(files)
+
     train_l = int(length * 0.7)
     val_l = train_l + int(length * 0.1)
-    # test_l = int(length * 0.2)
+
+    print(dir, length, train_l, val_l)
 
     if debug:
         print()
@@ -32,16 +39,14 @@ for dir in dirs:
         print("Total length:", length)
         print("Train stopping point:", train_l)
         print("Validation stopping point:", int(length * 0.1), val_l)
-        
-    for ind, img_n in enumerate(files):
-        imgs = glob.glob(img_n+"-*")
-        for img in imgs:
-            if ind <= train_l:
-                os.rename(img, "../train/"+dir+"/"+img)
-            elif ind <= val_l:
-                os.rename(img, "../val/"+dir+"/"+img)
-            else:
-                os.rename(img, "../test/"+dir+"/"+img)
+
+    for ind, img in enumerate(files):
+        if ind <= train_l:
+            os.rename(img, "../train/"+dir+"/"+img)
+        elif ind <= val_l:
+            os.rename(img, "../val/"+dir+"/"+img)
+        else:
+            os.rename(img, "../test/"+dir+"/"+img)
     os.chdir("..")
 
 os.chdir("..")
