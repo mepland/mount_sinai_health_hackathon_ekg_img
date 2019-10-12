@@ -1,5 +1,15 @@
 # Mount Sinai Health Hackathon EKG Imaging Project
 
+## Team Members:
+Bryana Banashefski
+Cole McCollum
+Jackie Kim
+Matthew Epland
+Rahul Puppala
+Stephane Nouafo
+Subrat Das
+Yurim Heo
+
 ## Summary
 TODO
 
@@ -24,8 +34,8 @@ source ~/.venvs/hackathon/bin/activate
 pip install -r requirements.txt
 ```
 
-## Running the Notebook
+## Running the Notebooks
 
 ```bash
-jupyter lab waveform_preproc.ipynb
+jupyter lab preprocessing/waveform_preproc.ipynb
 ```
