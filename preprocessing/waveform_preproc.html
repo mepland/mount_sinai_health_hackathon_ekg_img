@@ -13146,7 +13146,8 @@ div#notebook {
 
 <span class="c1">########################################################</span>
 <span class="c1"># set global rnd_seed for reproducibility</span>
-<span class="c1"># rnd_seed = 42</span>
+<span class="n">rnd_seed</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="p">)</span>
 
 <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;./output&#39;</span>
 
@@ -13190,8 +13191,13 @@ div#notebook {
 <span class="n">target_channel_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;ii&#39;</span><span class="p">,</span> <span class="s1">&#39;iii&#39;</span><span class="p">,</span> <span class="s1">&#39;avr&#39;</span><span class="p">,</span> <span class="s1">&#39;avl&#39;</span><span class="p">,</span> <span class="s1">&#39;avf&#39;</span><span class="p">,</span> <span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="s1">&#39;v2&#39;</span><span class="p">,</span> <span class="s1">&#39;v3&#39;</span><span class="p">,</span> <span class="s1">&#39;v4&#39;</span><span class="p">,</span> <span class="s1">&#39;v5&#39;</span><span class="p">,</span> <span class="s1">&#39;v6&#39;</span><span class="p">]</span>
 <span class="n">n_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_channel_names</span><span class="p">)</span>
 
+<span class="n">time_period</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># seconds</span>
+<span class="n">sampling_rate</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="n">n_slices_max</span> <span class="o">=</span> <span class="mi">5</span>
+
 <span class="c1"># n_rows_list = []</span>
-<span class="n">n_max_rows</span> <span class="o">=</span> <span class="mi">32000</span>
+<span class="n">n_rows_slice</span> <span class="o">=</span> <span class="n">sampling_rate</span><span class="o">*</span><span class="n">time_period</span>
 
 <span class="c1"># possible_Dx = set()</span>
 </pre></div>
@@ -13249,7 +13255,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">n_wf_counter_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -13271,31 +13277,36 @@ div#notebook {
         <span class="k">elif</span> <span class="n">Dx</span> <span class="o">==</span> <span class="s1">&#39;CARDIOMYOPATHY&#39;</span> <span class="ow">or</span> <span class="s1">&#39;HEART FAILURE&#39;</span> <span class="ow">in</span> <span class="n">Dx</span><span class="p">:</span>
             <span class="n">record_type</span> <span class="o">=</span> <span class="s1">&#39;HEART FAILURE&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">continue</span>
-
-    <span class="c1"># print(record_type)</span>
+            <span class="n">record_type</span> <span class="o">=</span> <span class="s1">&#39;OTHER&#39;</span>
 
     <span class="n">channel_names</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sig_name&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">target_channel_names</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">target_channel_names</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Missing some target channels!&#39;</span><span class="p">)</span>
 
-    <span class="n">df_channels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">target_channel_names</span><span class="p">)</span>
+    <span class="n">df_channels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">channel_names</span><span class="p">)</span>
     <span class="n">df_channels</span> <span class="o">=</span> <span class="n">df_channels</span><span class="p">[</span><span class="n">target_channel_names</span><span class="p">]</span>
+    <span class="n">n_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_channels</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
-    <span class="c1"># print(df_channels.head(4))</span>
-    <span class="c1"># n_rows_list.append(len(df_channels.index))</span>
+    <span class="k">if</span> <span class="n">n_rows</span> <span class="o">&lt;</span> <span class="n">n_rows_slice</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Only has </span><span class="si">{n_rows}</span><span class="s1"> &lt; n_rows_slice = </span><span class="si">{n_rows_slice}</span><span class="s1">!&#39;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_channels</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n_max_rows</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Only has {len(df_channels.index)} &lt; n_max_rows = </span><span class="si">{n_max_rows}</span><span class="s1">!&#39;</span><span class="p">)</span>
+    <span class="n">n_slices</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_rows</span> <span class="o">/</span> <span class="n">n_rows_slice</span><span class="p">)</span>
+    <span class="n">n_slices</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_slices</span><span class="p">,</span> <span class="n">n_slices_max</span><span class="p">)</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n_slices</span><span class="p">)</span>
 
-    <span class="c1"># TODO augment data here by adding noise to y, taking different n_max_rows samples in x</span>
-    <span class="n">df_channels_augmented</span> <span class="o">=</span> <span class="n">df_channels</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_max_rows</span><span class="p">]</span>
+    <span class="n">slice_prop</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_slices</span><span class="p">)</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">slice_prop</span><span class="p">)</span><span class="o">*</span><span class="n">starts</span>
 
-    <span class="c1"># from plotting import *</span>
-    <span class="n">plot_waveform</span><span class="p">(</span><span class="n">df_channels_augmented</span><span class="p">,</span> <span class="n">target_channel_names</span><span class="p">,</span>
-                  <span class="n">m_path</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{output}</span><span class="s2">/{record_type.replace(&#39; &#39;, &#39;_&#39;)}&quot;</span><span class="p">,</span>
-                  <span class="n">fname</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;wf_</span><span class="si">{n_wf_counter_dict[record_type]}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                  <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">islice</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_slices</span><span class="p">):</span>
+        <span class="n">i_slice_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">starts</span><span class="p">[</span><span class="n">islice</span><span class="p">]</span><span class="o">*</span><span class="n">n_rows</span><span class="p">)</span>
+
+        <span class="n">i_start</span> <span class="o">=</span> <span class="n">i_slice_start</span>
+        <span class="n">i_stop</span> <span class="o">=</span> <span class="n">i_slice_start</span> <span class="o">+</span> <span class="n">n_rows_slice</span>
+
+        <span class="n">plot_waveform</span><span class="p">(</span><span class="n">df_channels</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i_start</span><span class="p">:</span><span class="n">i_stop</span><span class="p">],</span> <span class="n">target_channel_names</span><span class="p">,</span>
+                      <span class="n">m_path</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{output}</span><span class="s2">/{record_type.replace(&#39; &#39;, &#39;_&#39;)}&quot;</span><span class="p">,</span> <span class="n">target_period</span><span class="o">=</span><span class="n">time_period</span><span class="p">,</span>
+                      <span class="n">fname</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;wf_</span><span class="si">{n_wf_counter_dict[record_type]}</span><span class="s1">-</span><span class="si">{islice}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                      <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="n">n_wf_counter_dict</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
@@ -13314,8 +13325,7 @@ div#notebook {
 
 
 <div class="output_subarea output_stream output_stderr output_text">
-<pre>100%|██████████| 549/549 [28:04&lt;00:00,  3.07s/it]
-</pre>
+<pre> 58%|█████▊    | 316/549 [1:07:20&lt;49:09, 12.66s/it]</pre>
 </div>
 </div>
 

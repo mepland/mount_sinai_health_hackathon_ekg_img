@@ -54,7 +54,8 @@ import wfdb
 
 ########################################################
 # set global rnd_seed for reproducibility
-# rnd_seed = 42
+rnd_seed = 42
+np.random.seed(rnd_seed)
 
 output = './output'
 
@@ -79,8 +80,13 @@ data_path = '../data/ptb-diagnostic-ecg-database-1.0.0'
 target_channel_names = ['i', 'ii', 'iii', 'avr', 'avl', 'avf', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6']
 n_channels = len(target_channel_names)
 
+time_period = 5 # seconds
+sampling_rate = 1000
+
+n_slices_max = 5
+
 # n_rows_list = []
-n_max_rows = 32000
+n_rows_slice = sampling_rate*time_period
 
 # possible_Dx = set()
 
@@ -110,7 +116,7 @@ with open(f'{data_path}/CONTROLS', 'r') as f_controls:
     controls = [x.replace('\n', '') for x in f_controls.readlines()]
 
 
-# In[7]:
+# In[ ]:
 
 
 n_wf_counter_dict = defaultdict(int)
@@ -132,31 +138,36 @@ for record in tqdm(records):
         elif Dx == 'CARDIOMYOPATHY' or 'HEART FAILURE' in Dx:
             record_type = 'HEART FAILURE'
         else:
-            continue
-
-    # print(record_type)
+            record_type = 'OTHER'
 
     channel_names = fields['sig_name']
-    if not set(channel_names).issubset(set(target_channel_names)):
+    if len(set(set(target_channel_names) - set(channel_names))) > 0:
         raise ValueError('Missing some target channels!')
 
-    df_channels = pd.DataFrame(channels, columns=target_channel_names)
+    df_channels = pd.DataFrame(channels, columns=channel_names)
     df_channels = df_channels[target_channel_names]
+    n_rows = len(df_channels.index)
 
-    # print(df_channels.head(4))
-    # n_rows_list.append(len(df_channels.index))
+    if n_rows < n_rows_slice:
+        raise ValueError(f'Only has {n_rows} < n_rows_slice = {n_rows_slice}!')
 
-    if len(df_channels.index) < n_max_rows:
-        raise ValueError(f'Only has {len(df_channels.index)} < n_max_rows = {n_max_rows}!')
+    n_slices = int(n_rows / n_rows_slice)
+    n_slices = min(n_slices, n_slices_max)
+    starts = np.random.random(n_slices)
 
-    # TODO augment data here by adding noise to y, taking different n_max_rows samples in x
-    df_channels_augmented = df_channels.iloc[0:n_max_rows]
+    slice_prop = 1. / float(n_slices)
+    starts = (1 - slice_prop)*starts
 
-    # from plotting import *
-    plot_waveform(df_channels_augmented, target_channel_names,
-                  m_path=f"{output}/{record_type.replace(' ', '_')}",
-                  fname=f'wf_{n_wf_counter_dict[record_type]}', tag='',
-                  inline=False)
+    for islice in range(n_slices):
+        i_slice_start = int(starts[islice]*n_rows)
+
+        i_start = i_slice_start
+        i_stop = i_slice_start + n_rows_slice
+
+        plot_waveform(df_channels.iloc[i_start:i_stop], target_channel_names,
+                      m_path=f"{output}/{record_type.replace(' ', '_')}", target_period=time_period,
+                      fname=f'wf_{n_wf_counter_dict[record_type]}-{islice}', tag='',
+                      inline=False)
 
     n_wf_counter_dict[record_type] += 1
 

@@ -49,33 +49,40 @@ colors = prop_cycle.by_key()['color']
 # aspect_ratio_multi = 1.
 
 plot_png=True
-png_dpi=200
 
 plot_jpg=False
-jpg_dpi=200
+
+target_res = 800
+size_in = 20
+
+png_dpi = target_res/size_in
+jpg_dpi = png_dpi
 
 ########################################################
-def plot_waveform(df, channel_names, m_path='output', fname='waveform', tag='', inline=False):
+def plot_waveform(df, channel_names, m_path='output', fname='waveform', tag='', inline=False, target_period=5):
 
 	fig, axs = plt.subplots(len(channel_names), sharex=True, sharey=True)
 
-	this_vsize = 20
-	this_aspect_ratio = 10. / 12. # width / height
-	fig.set_size_inches(this_aspect_ratio*this_vsize, this_vsize)
+	# this_vsize = 20
+	# this_aspect_ratio = 10. / 12. # width / height
+	# fig.set_size_inches(this_aspect_ratio*this_vsize, this_vsize)
 
-	x = np.linspace(0., 1., len(df.index))
+	# fig.set_size_inches(target_res / png_dpi, target_res / png_dpi)
+	fig.set_size_inches(size_in, size_in)
+
+	x = np.linspace(0., float(target_period), len(df.index))
 
 	for ichannel,channel_name in enumerate(channel_names):
 		axs[ichannel].plot(x, df[channel_name], c=colors[ ichannel % len(colors) ])
-		# axs[ichannel].axis('off')
 
-		axs[ichannel].xaxis.set_ticklabels([])
-		axs[ichannel].set_xlabel('')
+		axs[ichannel].grid(which='both', axis='both')
 
-		# axs[ichannel].yaxis.set_ticklabels([])
 		axs[ichannel].set_ylabel(channel_name)
+		if ichannel == len(channel_names) - 1:
+			axs[ichannel].set_xlabel('Time [S]')
 
-		# axs[ichannel].set_ylim([0.,1.])
+		axs[ichannel].set_xlim([0.,float(target_period)])
+
 	plt.tight_layout()
 	if inline:
 		fig.show()
