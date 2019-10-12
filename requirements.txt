@@ -2,6 +2,9 @@ jupyterlab
 pandas
 numpy
 matplotlib
+pillow
+tqdm
 scipy
+natsort
 scikit-learn
 wfdb
