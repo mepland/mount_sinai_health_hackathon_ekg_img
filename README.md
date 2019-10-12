@@ -1,14 +1,14 @@
 # Mount Sinai Health Hackathon EKG Imaging Project
 
 ## Team Members:
-Bryana Banashefski
-Cole McCollum
-Jackie Kim
-Matthew Epland
-Rahul Puppala
-Stephane Nouafo
-Subrat Das
-Yurim Heo
+Bryana Banashefski  
+Cole McCollum  
+Jackie Kim  
+Matthew Epland  
+Rahul Puppala  
+Stephane Junior Nouafo Wanko  
+Subrat Das  
+Yurim Heo  
 
 ## Summary
 TODO
