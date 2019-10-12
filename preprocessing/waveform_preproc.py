@@ -14,7 +14,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt')
 
 # ### Load packages!
 
-# In[ ]:
+# In[1]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -24,13 +24,14 @@ get_ipython().run_line_magic('autoreload', '2')
 # python
 import pandas as pd
 import numpy as np
-from natsort import natsorted
 from tqdm import tqdm
+from collections import defaultdict
 
 # import warnings
 # from time import time
 # from copy import copy
 # from collections import OrderedDict
+# from natsort import natsorted
 # import json
 # import pickle
 
@@ -62,7 +63,7 @@ pd.set_option('display.max_columns', 100)
 pd.set_option('display.width', 1000)
 
 
-# In[ ]:
+# In[2]:
 
 
 from plotting import * # load plotting code
@@ -70,7 +71,7 @@ from plotting import * # load plotting code
 
 # # Load the data
 
-# In[4]:
+# In[3]:
 
 
 data_path = '../data/ptb-diagnostic-ecg-database-1.0.0'
@@ -84,7 +85,7 @@ n_max_rows = 32000
 # possible_Dx = set()
 
 
-# In[5]:
+# In[4]:
 
 
 Dx_classes = [
@@ -95,24 +96,24 @@ Dx_classes = [
 ]
 
 
-# In[6]:
+# In[5]:
 
 
 with open(f'{data_path}/RECORDS', 'r') as f_records:
     records = [x.replace('\n', '') for x in f_records.readlines()]
 
 
-# In[7]:
+# In[6]:
 
 
 with open(f'{data_path}/CONTROLS', 'r') as f_controls:
     controls = [x.replace('\n', '') for x in f_controls.readlines()]
 
 
-# In[8]:
+# In[7]:
 
 
-n_wf = 0
+n_wf_counter_dict = defaultdict(int)
 for record in tqdm(records):
 
     channels, fields = wfdb.rdsamp(f'{data_path}/{record}', channels=list(range(n_channels)))
@@ -154,9 +155,10 @@ for record in tqdm(records):
     # from plotting import *
     plot_waveform(df_channels_augmented, target_channel_names,
                   m_path=f"{output}/{record_type.replace(' ', '_')}",
-                  fname=f'wf_{n_wf}', tag='',
+                  fname=f'wf_{n_wf_counter_dict[record_type]}', tag='',
                   inline=False)
-    n_wf += 1
+
+    n_wf_counter_dict[record_type] += 1
 
 
 # In[ ]:
@@ -185,7 +187,7 @@ for record in tqdm(records):
 from plotting import *
 
 
-# In[11]:
+# In[ ]:
 
 
 fields['comments']

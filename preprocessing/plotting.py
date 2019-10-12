@@ -67,10 +67,13 @@ def plot_waveform(df, channel_names, m_path='output', fname='waveform', tag='', 
 
 	for ichannel,channel_name in enumerate(channel_names):
 		axs[ichannel].plot(x, df[channel_name], c=colors[ ichannel % len(colors) ])
-		axs[ichannel].axis('off')
+		# axs[ichannel].axis('off')
 
-		# axs[ichannel].set_xlabel('')
-		# axs[ichannel].set_ylabel(channel_name)
+		axs[ichannel].xaxis.set_ticklabels([])
+		axs[ichannel].set_xlabel('')
+
+		# axs[ichannel].yaxis.set_ticklabels([])
+		axs[ichannel].set_ylabel(channel_name)
 
 		# axs[ichannel].set_ylim([0.,1.])
 
