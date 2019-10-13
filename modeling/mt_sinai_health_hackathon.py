@@ -36,6 +36,9 @@ batch_size = 8
 # Number of epochs to train for
 num_epochs = 5
 
+# True if you have a pretrained saved model and want to continue from there
+pretrained = False
+
 
 # PROBABLY DON'T NEED TO CHANGE THESE
 
@@ -55,6 +58,7 @@ import copy
 import itertools
 
 import torch
+import torch.onnx
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
@@ -205,6 +209,25 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
+                
+                # Export the model
+#                 torch.onnx.export(model,                     # model being run
+#                                   inputs,                    # model input (or a tuple for multiple inputs)
+#                                   "best_model_weights.onnx", # where to save the model (can be a file or file-like object)
+#                                   export_params=True,        # store the trained parameter weights inside the model file
+#                                   opset_version=10,          # the ONNX version to export the model to
+#                                   do_constant_folding=True,  # whether to execute constant folding for optimization
+#                                   input_names = ['conv1'],   # the model's input names
+#                                   output_names = ['fc'],     # the model's output names
+#                                   dynamic_axes={'conv1' : {0 : 'batch_size'},    # variable length axes
+#                                                 'fc' : {0 : 'batch_size'}})
+                torch.save({
+                  'epoch': epoch,
+                  'model_state_dict': model.state_dict(),
+                  'optimizer_state_dict': optimizer.state_dict(),
+                  'loss': epoch_loss
+                }, "best_model_weights.pth")
+                
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
 
@@ -223,6 +246,8 @@ model_ft, input_size = initialize_model(model_name, num_classes, feature_extract
 
 # Print the model we just instantiated
 # print(model_ft)
+# print(model_ft.conv1)
+# print(type(model_ft))
 
 # os.listdir("drive/My Drive/output (1).zip")
 # os.getcwd()
@@ -284,6 +309,14 @@ else:
 
 # Observe that all parameters are being optimized
 optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+
+# LOAD SAVED MODEL AND PARAMETERS
+if pretrained:
+  checkpoint = torch.load("best_model_weights.pth")
+  model_ft.load_state_dict(checkpoint['model_state_dict'])
+  optimizer_ft.load_state_dict(checkpoint['optimizer_state_dict'])
+  epoch = checkpoint['epoch']
+  loss = checkpoint['loss']
 
 # Setup the loss fxn
 criterion = nn.CrossEntropyLoss()
