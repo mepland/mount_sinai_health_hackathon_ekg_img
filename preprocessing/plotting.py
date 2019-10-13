@@ -52,14 +52,15 @@ plot_png=True
 
 plot_jpg=False
 
-target_res = 800
-size_in = 20
-
-png_dpi = target_res/size_in
-jpg_dpi = png_dpi
-
 ########################################################
 def plot_waveform(df, channel_names, m_path='output', fname='waveform', tag='', inline=False, target_period=5):
+
+	target_res = 800
+	size_in = 20
+
+	png_dpi = target_res/size_in
+	jpg_dpi = png_dpi
+
 
 	fig, axs = plt.subplots(len(channel_names), sharex=True, sharey=True)
 
