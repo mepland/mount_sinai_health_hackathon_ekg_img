@@ -112,4 +112,4 @@ class_path = f'./output/kaggle/{class_str}'
 os.makedirs(class_path, exist_ok=True)
 
 for index, row in tqdm.tqdm(df_class.iterrows(), total=df_class.shape[0]):
-plot_kaggle_waveform(row, class_path, f'wf_{index}')
+	plot_kaggle_waveform(row, class_path, f'wf_{index}')
