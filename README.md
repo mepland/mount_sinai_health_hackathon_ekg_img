@@ -12,8 +12,10 @@ Yurim Heo
 Jiang Yu
 
 ## Summary
-Transfer learning with Resnet 101 model is used in the projects. 
+Transfer learning with Resnet 101 model is used in the projects. <br/>
+
 Best results we achieved after the model was fine trained for 20 epoches: <br/>
+
 ----------
 train Loss: 0.0051 Acc: 0.9996
 val Loss: 0.2338 Acc: 0.9260 <br/>
