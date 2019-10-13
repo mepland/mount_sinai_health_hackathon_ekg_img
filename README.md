@@ -18,7 +18,7 @@ Best results we achieved after the model was fine trained for 20 epoches: <br/>
 train Loss: 0.0051 Acc: 0.9996
 val Loss: 0.2338 Acc: 0.9260 <br/>
 
-Training complete in 67m 57s
+Training complete in 67m 57s <br/>
 Best val Acc: 0.926020 <br/>
 
 Confusion Matrix: <br/>
