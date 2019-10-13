@@ -31,13 +31,13 @@ model_name = "resnet"
 num_classes = 6
 
 # Batch size for training (change depending on how much memory you have)
-batch_size = 8
+batch_size = 16
 
 # Number of epochs to train for
-num_epochs = 5
+num_epochs = 20
 
 # True if you have a pretrained saved model and want to continue from there
-pretrained = False
+pretrained = True
 
 
 # PROBABLY DON'T NEED TO CHANGE THESE
@@ -120,7 +120,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier.in_features
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
+        input_size = 800
 
     elif model_name == "inception":
         """ Inception v3
@@ -146,6 +146,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
     since = time.time()
 
     val_acc_history = []
+    train_acc_history = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -230,6 +231,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                 
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
+            else:
+                train_acc_history.append(epoch_acc)
 
         print()
 
@@ -239,13 +242,13 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model, val_acc_history
+    return model, val_acc_history, train_acc_history
 
 # Initialize the model for this run
 model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
 
 # Print the model we just instantiated
-# print(model_ft)
+print(model_ft)
 # print(model_ft.conv1)
 # print(type(model_ft))
 
@@ -322,7 +325,7 @@ if pretrained:
 criterion = nn.CrossEntropyLoss()
 
 # Train and evaluate
-model_ft, hist = train_model(model_ft, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs, is_inception=(model_name=="inception"))
+model_ft, val_hist, train_hist = train_model(model_ft, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs, is_inception=(model_name=="inception"))
 
 nb_classes = 6
 
@@ -350,6 +353,8 @@ with torch.no_grad():
 print(classes)
 print(preds)
 print(type(classes))
+
+import numpy as np
 
 """
 This function prints and plots the confusion matrix.
@@ -387,6 +392,9 @@ for res in classes:
   final_classes.extend(list(res))
 for res in preds:
   final_preds.extend(list(res))
+  
+print(final_classes)
+print(final_preds)
 
 #Output a k × k confusion matrix
 confM = confusion_matrix(final_classes, final_preds)
