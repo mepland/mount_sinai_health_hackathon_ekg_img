@@ -12,7 +12,7 @@ Yurim Heo
 Jiang Yu
 
 ## Summary
-TODO
+
 
 Open ECG data from [physionet](https://physionet.org/content/ptbdb/1.0.0/), loaded with [wfdb](https://github.com/MIT-LCP/wfdb-python)  
 
