@@ -13,20 +13,20 @@ Jiang Yu
 
 ## Summary
 Transfer learning with Resnet 101 model is used in the projects. 
-Best results we achieved after the model was fine trained for 20 epoches: 
+Best results we achieved after the model was fine trained for 20 epoches: <br/>
 ----------
 train Loss: 0.0051 Acc: 0.9996
-val Loss: 0.2338 Acc: 0.9260
+val Loss: 0.2338 Acc: 0.9260 <br/>
 
 Training complete in 67m 57s
-Best val Acc: 0.926020
+Best val Acc: 0.926020 <br/>
 
-Confusion Matrix:
- [[133   7   0   0   4]
- [  6 146   0   5   2]
- [  0   1 158   0   0]
- [  3  11   0 143   2]
- [  3   3   0   0 153]]
+Confusion Matrix: <br/>
+ [[133   7   0   0   4]<br/>
+ [  6 146   0   5   2]<br/>
+ [  0   1 158   0   0]<br/>
+ [  3  11   0 143   2]<br/>
+ [  3   3   0   0 153]] <br/>
  
 
 Open ECG data from [physionet](https://physionet.org/content/ptbdb/1.0.0/), loaded with [wfdb](https://github.com/MIT-LCP/wfdb-python)  
