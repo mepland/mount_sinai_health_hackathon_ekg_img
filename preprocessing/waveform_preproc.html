@@ -13080,23 +13080,9 @@ div#notebook {
 <h1 id="Waveform-Preprocessing">Waveform Preprocessing<a class="anchor-link" href="#Waveform-Preprocessing">&#182;</a></h1>
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># install requirements</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install --upgrade pip
-<span class="o">!{</span>sys.executable<span class="o">}</span> -m pip install -r ../requirements.txt
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
+</div>import sys
+get_ipython().system('{sys.executable} -m pip install --upgrade pip');
+get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13106,7 +13092,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
@@ -13116,40 +13102,19 @@ div#notebook {
 <span class="c1"># python</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
-
-<span class="c1"># import warnings</span>
-<span class="c1"># from time import time</span>
-<span class="c1"># from copy import copy</span>
-<span class="c1"># from collections import OrderedDict</span>
-<span class="c1"># from natsort import natsorted</span>
-<span class="c1"># import json</span>
-<span class="c1"># import pickle</span>
-
-<span class="c1">########################################################</span>
-<span class="c1"># sklearn</span>
-<span class="c1"># warnings.filterwarnings(&#39;ignore&#39;, message=&#39;sklearn.externals.joblib is deprecated in 0.21 and will be removed in 0.23&#39;)</span>
-<span class="c1"># from sklearn.model_selection import train_test_split</span>
-<span class="c1"># from sklearn.metrics import roc_curve, auc, roc_auc_score</span>
-
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
+  
 <span class="c1">########################################################</span>
 <span class="c1"># plotting</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">plotting</span> <span class="kn">import</span> <span class="o">*</span> <span class="c1"># load plotting code</span>
 <span class="o">%</span><span class="k">matplotlib</span> inline
-
-<span class="c1">########################################################</span>
-<span class="c1"># waveform package</span>
-<span class="c1"># https://github.com/-LCP/wfdb-python</span>
-<span class="kn">import</span> <span class="nn">wfdb</span>
 
 <span class="c1">########################################################</span>
 <span class="c1"># set global rnd_seed for reproducibility</span>
 <span class="n">rnd_seed</span> <span class="o">=</span> <span class="mi">42</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="p">)</span>
-
-<span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;./output&#39;</span>
 
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_rows&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_columns&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
@@ -13161,12 +13126,116 @@ div#notebook {
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<h1 id="Setup-Variables-and-Functions">Setup Variables and Functions<a class="anchor-link" href="#Setup-Variables-and-Functions">&#182;</a></h1>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">plotting</span> <span class="k">import</span> <span class="o">*</span> <span class="c1"># load plotting code</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># input vars for this sample</span>
+<span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;../data/PhysioNetChallenge2020_Training_CPSC/Training_WFDB&#39;</span>
+
+<span class="n">n_ekgs_total</span> <span class="o">=</span> <span class="mi">6877</span>
+<span class="n">sampling_freq</span> <span class="o">=</span> <span class="mi">500</span> <span class="c1"># Hz</span>
+
+<span class="n">channel_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;II&#39;</span><span class="p">,</span> <span class="s1">&#39;III&#39;</span><span class="p">,</span> <span class="s1">&#39;aVR&#39;</span><span class="p">,</span> <span class="s1">&#39;aVL&#39;</span><span class="p">,</span> <span class="s1">&#39;aVF&#39;</span><span class="p">,</span> <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span> <span class="s1">&#39;V5&#39;</span><span class="p">,</span> <span class="s1">&#39;V6&#39;</span><span class="p">]</span>
+<span class="n">n_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)</span>
+
+<span class="n">Dx_classes</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s1">&#39;Normal&#39;</span><span class="p">:</span> <span class="s1">&#39;Normal sinus rhythm&#39;</span><span class="p">,</span>
+<span class="s1">&#39;AF&#39;</span><span class="p">:</span> <span class="s1">&#39;Atrial fibrillation&#39;</span><span class="p">,</span>
+<span class="s1">&#39;I-AVB&#39;</span><span class="p">:</span> <span class="s1">&#39;Airst-degree atrioventricular block&#39;</span><span class="p">,</span>
+<span class="s1">&#39;LBBB&#39;</span><span class="p">:</span> <span class="s1">&#39;Left bundle branch block&#39;</span><span class="p">,</span>
+<span class="s1">&#39;PAC&#39;</span><span class="p">:</span> <span class="s1">&#39;Premature atrial complex&#39;</span><span class="p">,</span>
+<span class="s1">&#39;PVC&#39;</span><span class="p">:</span> <span class="s1">&#39;Premature ventricular complex&#39;</span><span class="p">,</span>
+<span class="s1">&#39;RBBB&#39;</span><span class="p">:</span> <span class="s1">&#39;Right bundle branch block&#39;</span><span class="p">,</span>
+<span class="s1">&#39;STD&#39;</span><span class="p">:</span> <span class="s1">&#39;ST-segment depression&#39;</span><span class="p">,</span>
+<span class="s1">&#39;STE&#39;</span><span class="p">:</span> <span class="s1">&#39;ST-segment elevation&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># output vars</span>
+<span class="n">im_res</span><span class="o">=</span><span class="mi">800</span>
+<span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;./output/im_res_</span><span class="si">{im_res}</span><span class="s1">&#39;</span>
+<span class="n">slice_time_range</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># seconds</span>
+<span class="n">n_slices_max</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># max number of slice_time_range length slices to take from one original waveform</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">load_challenge_data</span><span class="p">(</span><span class="n">m_path</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;.mat&#39;</span> <span class="ow">in</span> <span class="n">fname</span> <span class="ow">or</span> <span class="s1">&#39;.hea&#39;</span> <span class="ow">in</span> <span class="n">fname</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Expected fname = </span><span class="si">{fname}</span><span class="s1"> to NOT have any extensions .mat or .hea&#39;</span><span class="p">)</span>
+
+    <span class="n">mat_fname</span> <span class="o">=</span>  <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{m_path}</span><span class="s1">/</span><span class="si">{fname}</span><span class="s1">.mat&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">mat_fname</span><span class="p">)[</span><span class="s1">&#39;val&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">EnvironmentError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not load mat file </span><span class="si">{mat_fname}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">header_fname</span> <span class="o">=</span>  <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{m_path}</span><span class="s1">/</span><span class="si">{fname}</span><span class="s1">.hea&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">header_fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">header_data_raw</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+            <span class="c1"># clean any whitespace to single spaces</span>
+            <span class="n">header_data</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">header_data_raw</span><span class="p">]</span>
+
+            <span class="c1"># pull metadata from first line</span>
+            <span class="n">h_line</span> <span class="o">=</span> <span class="n">header_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+            <span class="n">_n_leads</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h_line</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">_n_leads</span> <span class="o">!=</span> <span class="n">n_channels</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Expected </span><span class="si">{n_channels}</span><span class="s1"> but found </span><span class="si">{_n_leads}</span><span class="s1">!&#39;</span><span class="p">)</span>
+
+            <span class="n">_sampling_freq</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h_line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">_sampling_freq</span> <span class="o">!=</span> <span class="n">sampling_freq</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Header reports a </span><span class="si">{_sampling_freq}</span><span class="s1"> Hz sampling rate, but expected </span><span class="si">{sampling_freq}</span><span class="s1">!&#39;</span><span class="p">)</span>
+
+            <span class="n">_n_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h_line</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">_n_samples</span> <span class="o">!=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Header reports </span><span class="si">{_n_samples}</span><span class="s1"> samples, but .mat only has </span><span class="si">{x.shape[1]}</span><span class="s1">!&#39;</span><span class="p">)</span>
+
+            <span class="c1"># get gain per lead</span>
+            <span class="n">gain_lead</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+            <span class="n">offset_lead</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">):</span>
+                <span class="n">h_line_tmp</span> <span class="o">=</span> <span class="n">header_data</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                <span class="n">gain_split</span> <span class="o">=</span> <span class="n">h_line_tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">gain_split</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;mV&#39;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Expected mV units, but found </span><span class="si">{gain_split[1]}</span><span class="s1">!&#39;</span><span class="p">)</span>
+                <span class="n">gain_lead</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">gain_split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">offset_lead</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h_line_tmp</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+
+            <span class="c1"># get Dx</span>
+            <span class="n">Dx_line</span> <span class="o">=</span> <span class="n">header_data</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;Dx&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Dx_line</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Did not find Dx information on line 16!&#39;</span><span class="p">)</span>
+            <span class="n">Dx</span> <span class="o">=</span> <span class="n">Dx_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#Dx: &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">EnvironmentError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not load header file </span><span class="si">{header_fname}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ich</span><span class="p">,</span><span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">channel_names</span><span class="p">):</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">offset_lead</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">gain_lead</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">dfp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dfp</span><span class="p">,</span> <span class="n">Dx</span>
 </pre></div>
 
     </div>
@@ -13177,29 +13246,24 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Load-the-data">Load the data<a class="anchor-link" href="#Load-the-data">&#182;</a></h1>
+<hr>
+<h1 id="Load-the-data-and-plot-waveforms">Load the data and plot waveforms<a class="anchor-link" href="#Load-the-data-and-plot-waveforms">&#182;</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;../data/ptb-diagnostic-ecg-database-1.0.0&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">input_files</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;mat&#39;</span><span class="p">):</span>
+        <span class="n">input_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.mat&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
 
-<span class="n">target_channel_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;ii&#39;</span><span class="p">,</span> <span class="s1">&#39;iii&#39;</span><span class="p">,</span> <span class="s1">&#39;avr&#39;</span><span class="p">,</span> <span class="s1">&#39;avl&#39;</span><span class="p">,</span> <span class="s1">&#39;avf&#39;</span><span class="p">,</span> <span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="s1">&#39;v2&#39;</span><span class="p">,</span> <span class="s1">&#39;v3&#39;</span><span class="p">,</span> <span class="s1">&#39;v4&#39;</span><span class="p">,</span> <span class="s1">&#39;v5&#39;</span><span class="p">,</span> <span class="s1">&#39;v6&#39;</span><span class="p">]</span>
-<span class="n">n_channels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_channel_names</span><span class="p">)</span>
-
-<span class="n">time_period</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># seconds</span>
-<span class="n">sampling_rate</span> <span class="o">=</span> <span class="mi">1000</span>
-
-<span class="n">n_slices_max</span> <span class="o">=</span> <span class="mi">5</span>
-
-<span class="c1"># n_rows_list = []</span>
-<span class="n">n_rows_slice</span> <span class="o">=</span> <span class="n">sampling_rate</span><span class="o">*</span><span class="n">time_period</span>
-
-<span class="c1"># possible_Dx = set()</span>
+<span class="n">_n_ekgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">_n_ekgs</span> <span class="o">!=</span> <span class="n">n_ekgs_total</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Only found </span><span class="si">{_n_ekgs}</span><span class="s1"> != expected </span><span class="si">{n_ekgs_total}</span><span class="s1">!&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13209,15 +13273,10 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">Dx_classes</span> <span class="o">=</span> <span class="p">[</span>
-<span class="s1">&#39;BUNDLE BRANCH BLOCK&#39;</span><span class="p">,</span>
-<span class="s1">&#39;DYSRHYTHMIA&#39;</span><span class="p">,</span>
-<span class="s1">&#39;MYOCARDIAL INFARCTION&#39;</span><span class="p">,</span>
-<span class="c1"># &#39;HEART FAILURE&#39;, = # &#39;CARDIOMYOPATHY&#39;, &#39;HEART FAILURE (NYHA 2)&#39;, &#39;HEART FAILURE (NYHA 3)&#39;, &#39;HEART FAILURE (NYHA 4)&#39;,</span>
-<span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># allowed_Dx_classes = [] # TODo</span>
 </pre></div>
 
     </div>
@@ -13227,86 +13286,44 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{data_path}</span><span class="s1">/RECORDS&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_records</span><span class="p">:</span>
-    <span class="n">records</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f_records</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{data_path}</span><span class="s1">/CONTROLS&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_controls</span><span class="p">:</span>
-    <span class="n">controls</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f_controls</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">n_wf_counter_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">records</span><span class="p">):</span>
+<span class="n">n_rows_per_slice</span> <span class="o">=</span> <span class="n">sampling_freq</span><span class="o">*</span><span class="n">slice_time_range</span>
+<span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">input_files</span><span class="p">):</span>
 
-    <span class="n">channels</span><span class="p">,</span> <span class="n">fields</span> <span class="o">=</span> <span class="n">wfdb</span><span class="o">.</span><span class="n">rdsamp</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{data_path}</span><span class="s1">/</span><span class="si">{record}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_channels</span><span class="p">)))</span>
+    <span class="n">dfp_channels</span><span class="p">,</span> <span class="n">Dx</span> <span class="o">=</span> <span class="n">load_challenge_data</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">input_file</span><span class="p">)</span>
 
-    <span class="n">record_type</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">controls</span><span class="p">:</span>
-        <span class="n">record_type</span> <span class="o">=</span> <span class="s1">&#39;CONTROL&#39;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">Dx_field</span> <span class="o">=</span> <span class="s1">&#39;Reason for admission&#39;</span>
-        <span class="n">Dx</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;comments&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">Dx_field</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
-        <span class="n">Dx</span> <span class="o">=</span> <span class="n">Dx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{Dx_field}</span><span class="s1">: &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="c1"># possible_Dx.add(Dx)</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">Dx</span>
+<span class="c1">#    if Dx in allowed_Dx_classes:</span>
+<span class="c1">#        record_type = Dx</span>
+<span class="c1">#    elif Dx in [&#39;TODo&#39;, &#39;TODo&#39;]:</span>
+<span class="c1">#        record_type = &#39;TODo&#39;</span>
+<span class="c1">#    else:</span>
+<span class="c1">#        record_type = &#39;Other&#39;</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">Dx</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="p">:</span>
-            <span class="n">record_type</span> <span class="o">=</span> <span class="n">Dx</span>
-        <span class="k">elif</span> <span class="n">Dx</span> <span class="o">==</span> <span class="s1">&#39;CARDIOMYOPATHY&#39;</span> <span class="ow">or</span> <span class="s1">&#39;HEART FAILURE&#39;</span> <span class="ow">in</span> <span class="n">Dx</span><span class="p">:</span>
-            <span class="n">record_type</span> <span class="o">=</span> <span class="s1">&#39;HEART FAILURE&#39;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">record_type</span> <span class="o">=</span> <span class="s1">&#39;OTHER&#39;</span>
+    <span class="n">n_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfp_channels</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_rows</span> <span class="o">&lt;</span> <span class="n">n_rows_per_slice</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Only has </span><span class="si">{n_rows}</span><span class="s1"> &lt; n_rows_per_slice = </span><span class="si">{n_rows_per_slice}</span><span class="s1">!&#39;</span><span class="p">)</span>
 
-    <span class="n">channel_names</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sig_name&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">target_channel_names</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Missing some target channels!&#39;</span><span class="p">)</span>
-
-    <span class="n">df_channels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">channel_names</span><span class="p">)</span>
-    <span class="n">df_channels</span> <span class="o">=</span> <span class="n">df_channels</span><span class="p">[</span><span class="n">target_channel_names</span><span class="p">]</span>
-    <span class="n">n_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_channels</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">n_rows</span> <span class="o">&lt;</span> <span class="n">n_rows_slice</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Only has </span><span class="si">{n_rows}</span><span class="s1"> &lt; n_rows_slice = </span><span class="si">{n_rows_slice}</span><span class="s1">!&#39;</span><span class="p">)</span>
-
-    <span class="n">n_slices</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_rows</span> <span class="o">/</span> <span class="n">n_rows_slice</span><span class="p">)</span>
-    <span class="n">n_slices</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_slices</span><span class="p">,</span> <span class="n">n_slices_max</span><span class="p">)</span>
-    <span class="n">starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n_slices</span><span class="p">)</span>
-
+    <span class="n">n_slices</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n_rows</span> <span class="o">/</span> <span class="n">n_rows_per_slice</span><span class="p">),</span> <span class="n">n_slices_max</span><span class="p">)</span>
     <span class="n">slice_prop</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_slices</span><span class="p">)</span>
+
+    <span class="n">starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n_slices</span><span class="p">)</span>
     <span class="n">starts</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">slice_prop</span><span class="p">)</span><span class="o">*</span><span class="n">starts</span>
 
     <span class="k">for</span> <span class="n">islice</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_slices</span><span class="p">):</span>
         <span class="n">i_slice_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">starts</span><span class="p">[</span><span class="n">islice</span><span class="p">]</span><span class="o">*</span><span class="n">n_rows</span><span class="p">)</span>
 
-        <span class="n">i_start</span> <span class="o">=</span> <span class="n">i_slice_start</span>
-        <span class="n">i_stop</span> <span class="o">=</span> <span class="n">i_slice_start</span> <span class="o">+</span> <span class="n">n_rows_slice</span>
-
-        <span class="n">plot_waveform</span><span class="p">(</span><span class="n">df_channels</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i_start</span><span class="p">:</span><span class="n">i_stop</span><span class="p">],</span> <span class="n">target_channel_names</span><span class="p">,</span>
-                      <span class="n">m_path</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{output}</span><span class="s2">/{record_type.replace(&#39; &#39;, &#39;_&#39;)}&quot;</span><span class="p">,</span> <span class="n">target_period</span><span class="o">=</span><span class="n">time_period</span><span class="p">,</span>
-                      <span class="n">fname</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;wf_</span><span class="si">{n_wf_counter_dict[record_type]}</span><span class="s1">-</span><span class="si">{islice}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                      <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">plot_waveform</span><span class="p">(</span><span class="n">dfp_channels</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i_slice_start</span><span class="p">:</span><span class="n">i_slice_start</span><span class="o">+</span><span class="n">n_rows_per_slice</span><span class="p">],</span>
+                      <span class="n">channel_names</span><span class="p">,</span> <span class="n">sampling_freq</span><span class="p">,</span>
+                      <span class="n">m_path</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{output_path}</span><span class="s1">/</span><span class="si">{record_type}</span><span class="s1">&#39;</span><span class="p">,</span>
+                      <span class="n">fname</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;wf_</span><span class="si">{n_wf_counter_dict[record_type]}</span><span class="s1">-</span><span class="si">{islice}</span><span class="s1">&#39;</span><span class="p">,</span>
+                      <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">target_time_range</span><span class="o">=</span><span class="n">slice_time_range</span><span class="p">,</span> <span class="n">target_im_res</span><span class="o">=</span><span class="n">im_res</span><span class="p">,</span>
+                      <span class="p">)</span>
 
     <span class="n">n_wf_counter_dict</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
@@ -13315,54 +13332,11 @@ div#notebook {
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>100%|██████████| 549/549 [2:28:04&lt;00:00, 16.18s/it]   
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># min(n_rows_list)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># print(sorted(list(possible_Dx)))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<hr>
 <h1 id="Dev">Dev<a class="anchor-link" href="#Dev">&#182;</a></h1>
 </div>
 </div>
@@ -13372,7 +13346,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># raise ValueError(&#39;Stop Here, in Dev!&#39;)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Stop Here, in Dev!&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13385,7 +13359,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">plotting</span> <span class="k">import</span> <span class="o">*</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">plotting</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 
     </div>
@@ -13398,7 +13372,46 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;comments&#39;</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_channels</span><span class="p">,</span> <span class="n">Dx</span> <span class="o">=</span> <span class="n">load_challenge_data</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;A0001&#39;</span><span class="p">,</span> <span class="n">target_time_range</span><span class="o">=</span><span class="n">slice_time_range</span><span class="p">,</span> <span class="n">target_im_res</span><span class="o">=</span><span class="n">im_res</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">Dx</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_channels</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_waveform</span><span class="p">(</span><span class="n">dfp_channels</span><span class="p">,</span> <span class="n">channel_names</span><span class="p">,</span> <span class="n">sampling_freq</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
     </div>

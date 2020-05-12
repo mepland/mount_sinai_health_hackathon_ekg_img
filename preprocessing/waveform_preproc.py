@@ -2,19 +2,12 @@
 # coding: utf-8
 
 # # Waveform Preprocessing
-
-# In[ ]:
-
-
-# install requirements
 import sys
-get_ipython().system('{sys.executable} -m pip install --upgrade pip')
-get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt')
-
-
+get_ipython().system('{sys.executable} -m pip install --upgrade pip');
+get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 # ### Load packages!
 
-# In[1]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -26,170 +19,192 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
-
-# import warnings
-# from time import time
-# from copy import copy
-# from collections import OrderedDict
-# from natsort import natsorted
-# import json
-# import pickle
-
-########################################################
-# sklearn
-# warnings.filterwarnings('ignore', message='sklearn.externals.joblib is deprecated in 0.21 and will be removed in 0.23')
-# from sklearn.model_selection import train_test_split
-# from sklearn.metrics import roc_curve, auc, roc_auc_score
-
+from scipy.io import loadmat
+  
 ########################################################
 # plotting
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+from plotting import * # load plotting code
 get_ipython().run_line_magic('matplotlib', 'inline')
-
-########################################################
-# waveform package
-# https://github.com/-LCP/wfdb-python
-import wfdb
 
 ########################################################
 # set global rnd_seed for reproducibility
 rnd_seed = 42
 np.random.seed(rnd_seed)
 
-output = './output'
-
 pd.set_option('display.max_rows', 100)
 pd.set_option('display.max_columns', 100)
 pd.set_option('display.width', 1000)
 
 
-# In[2]:
+# ***
+# # Setup Variables and Functions
+
+# In[ ]:
 
 
-from plotting import * # load plotting code
+# input vars for this sample
+data_path = '../data/PhysioNetChallenge2020_Training_CPSC/Training_WFDB'
+
+n_ekgs_total = 6877
+sampling_freq = 500 # Hz
+
+channel_names = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
+n_channels = len(channel_names)
+
+Dx_classes = {
+'Normal': 'Normal sinus rhythm',
+'AF': 'Atrial fibrillation',
+'I-AVB': 'Airst-degree atrioventricular block',
+'LBBB': 'Left bundle branch block',
+'PAC': 'Premature atrial complex',
+'PVC': 'Premature ventricular complex',
+'RBBB': 'Right bundle branch block',
+'STD': 'ST-segment depression',
+'STE': 'ST-segment elevation',
+}
+
+# output vars
+im_res=800
+output_path = f'./output/im_res_{im_res}'
+slice_time_range = 5 # seconds
+n_slices_max = 5 # max number of slice_time_range length slices to take from one original waveform
 
 
-# # Load the data
-
-# In[3]:
+# In[ ]:
 
 
-data_path = '../data/ptb-diagnostic-ecg-database-1.0.0'
+def load_challenge_data(m_path, fname):
+    if '.mat' in fname or '.hea' in fname:
+        raise ValueError(f'Expected fname = {fname} to NOT have any extensions .mat or .hea')
 
-target_channel_names = ['i', 'ii', 'iii', 'avr', 'avl', 'avf', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6']
-n_channels = len(target_channel_names)
+    mat_fname =  f'{m_path}/{fname}.mat'
+    try:
+        x = loadmat(mat_fname)['val']
+    except EnvironmentError:
+        raise EnvironmentError(f'Could not load mat file {mat_fname}')
 
-time_period = 5 # seconds
-sampling_rate = 1000
+    header_fname =  f'{m_path}/{fname}.hea'
+    try:
+        with open(header_fname, 'r') as f:
+            header_data_raw = f.readlines()
 
-n_slices_max = 5
+            # clean any whitespace to single spaces
+            header_data = [' '.join(l.split()) for l in header_data_raw]
 
-# n_rows_list = []
-n_rows_slice = sampling_rate*time_period
+            # pull metadata from first line
+            h_line = header_data[0].split(' ')
 
-# possible_Dx = set()
+            _n_leads = int(h_line[1])
+            if _n_leads != n_channels:
+                raise ValueError(f'Expected {n_channels} but found {_n_leads}!')
+
+            _sampling_freq = int(h_line[2])
+            if _sampling_freq != sampling_freq:
+                raise ValueError(f'Header reports a {_sampling_freq} Hz sampling rate, but expected {sampling_freq}!')
+
+            _n_samples = int(h_line[3])
+            if _n_samples != x.shape[1]:
+                raise ValueError(f'Header reports {_n_samples} samples, but .mat only has {x.shape[1]}!')
+
+            # get gain per lead
+            gain_lead = np.zeros(n_channels)
+            offset_lead = np.zeros(n_channels)
+            for i in range(n_channels):
+                h_line_tmp = header_data[i+1].split(' ')
+                gain_split = h_line_tmp[2].split('/')
+                if gain_split[1] != 'mV':
+                    raise ValueError(f'Expected mV units, but found {gain_split[1]}!')
+                gain_lead[i] = int(gain_split[0])
+                offset_lead[i] = int(h_line_tmp[4])
+
+            # get Dx
+            Dx_line = header_data[15]
+            if 'Dx' not in Dx_line:
+                raise ValueError('Did not find Dx information on line 16!')
+            Dx = Dx_line.replace('#Dx: ', '')
+
+    except EnvironmentError:
+        raise EnvironmentError(f'Could not load header file {header_fname}')
+
+    results = {}
+    for ich,ch in enumerate(channel_names):
+        results[ch] = (x[i]-offset_lead[i])/gain_lead[i]
+    dfp = pd.DataFrame(results)
+
+    return dfp, Dx
 
 
-# In[4]:
+# ***
+# # Load the data and plot waveforms
+
+# In[ ]:
 
 
-Dx_classes = [
-'BUNDLE BRANCH BLOCK',
-'DYSRHYTHMIA',
-'MYOCARDIAL INFARCTION',
-# 'HEART FAILURE', = # 'CARDIOMYOPATHY', 'HEART FAILURE (NYHA 2)', 'HEART FAILURE (NYHA 3)', 'HEART FAILURE (NYHA 4)',
-]
+input_files = []
+for f in os.listdir(data_path):
+    if os.path.isfile(os.path.join(data_path, f)) and not f.lower().startswith('.') and f.lower().endswith('mat'):
+        input_files.append(f.replace('.mat', ''))
+
+_n_ekgs = len(input_files)
+if _n_ekgs != n_ekgs_total:
+    raise ValueError(f'Only found {_n_ekgs} != expected {n_ekgs_total}!')
 
 
-# In[5]:
+# In[ ]:
 
 
-with open(f'{data_path}/RECORDS', 'r') as f_records:
-    records = [x.replace('\n', '') for x in f_records.readlines()]
+# allowed_Dx_classes = [] # TODo
 
 
-# In[6]:
-
-
-with open(f'{data_path}/CONTROLS', 'r') as f_controls:
-    controls = [x.replace('\n', '') for x in f_controls.readlines()]
-
-
-# In[7]:
+# In[ ]:
 
 
 n_wf_counter_dict = defaultdict(int)
-for record in tqdm(records):
+n_rows_per_slice = sampling_freq*slice_time_range
+for input_file in tqdm(input_files):
 
-    channels, fields = wfdb.rdsamp(f'{data_path}/{record}', channels=list(range(n_channels)))
+    dfp_channels, Dx = load_challenge_data(data_path, input_file)
 
-    record_type = None
-    if record in controls:
-        record_type = 'CONTROL'
-    else:
-        Dx_field = 'Reason for admission'
-        Dx = [x for x in fields['comments'] if Dx_field in x]
-        Dx = Dx[0].replace(f'{Dx_field}: ', '').upper()
-        # possible_Dx.add(Dx)
+    record_type = Dx
+#    if Dx in allowed_Dx_classes:
+#        record_type = Dx
+#    elif Dx in ['TODo', 'TODo']:
+#        record_type = 'TODo'
+#    else:
+#        record_type = 'Other'
+    record_type = record_type.replace(' ', '_')
 
-        if Dx in Dx_classes:
-            record_type = Dx
-        elif Dx == 'CARDIOMYOPATHY' or 'HEART FAILURE' in Dx:
-            record_type = 'HEART FAILURE'
-        else:
-            record_type = 'OTHER'
+    n_rows = len(dfp_channels.index)
+    if n_rows < n_rows_per_slice:
+        raise ValueError(f'Only has {n_rows} < n_rows_per_slice = {n_rows_per_slice}!')
 
-    channel_names = fields['sig_name']
-    if len(set(set(target_channel_names) - set(channel_names))) > 0:
-        raise ValueError('Missing some target channels!')
-
-    df_channels = pd.DataFrame(channels, columns=channel_names)
-    df_channels = df_channels[target_channel_names]
-    n_rows = len(df_channels.index)
-
-    if n_rows < n_rows_slice:
-        raise ValueError(f'Only has {n_rows} < n_rows_slice = {n_rows_slice}!')
-
-    n_slices = int(n_rows / n_rows_slice)
-    n_slices = min(n_slices, n_slices_max)
-    starts = np.random.random(n_slices)
-
+    n_slices = min(int(n_rows / n_rows_per_slice), n_slices_max)
     slice_prop = 1. / float(n_slices)
+
+    starts = np.random.random(n_slices)
     starts = (1 - slice_prop)*starts
 
     for islice in range(n_slices):
         i_slice_start = int(starts[islice]*n_rows)
 
-        i_start = i_slice_start
-        i_stop = i_slice_start + n_rows_slice
-
-        plot_waveform(df_channels.iloc[i_start:i_stop], target_channel_names,
-                      m_path=f"{output}/{record_type.replace(' ', '_')}", target_period=time_period,
-                      fname=f'wf_{n_wf_counter_dict[record_type]}-{islice}', tag='',
-                      inline=False)
+        plot_waveform(dfp_channels.iloc[i_slice_start:i_slice_start+n_rows_per_slice],
+                      channel_names, sampling_freq,
+                      m_path=f'{output_path}/{record_type}',
+                      fname=f'wf_{n_wf_counter_dict[record_type]}-{islice}',
+                      tag='', inline=False,
+                      target_time_range=slice_time_range, target_im_res=im_res,
+                      )
 
     n_wf_counter_dict[record_type] += 1
 
 
-# In[ ]:
-
-
-# min(n_rows_list)
-
-
-# In[ ]:
-
-
-# print(sorted(list(possible_Dx)))
-
-
+# ***
 # # Dev
 
 # In[ ]:
 
 
-# raise ValueError('Stop Here, in Dev!')
+raise ValueError('Stop Here, in Dev!')
 
 
 # In[ ]:
@@ -201,7 +216,25 @@ from plotting import *
 # In[ ]:
 
 
-fields['comments']
+dfp_channels, Dx = load_challenge_data(data_path, fname='A0001', target_time_range=slice_time_range, target_im_res=im_res)
+
+
+# In[ ]:
+
+
+Dx
+
+
+# In[ ]:
+
+
+dfp_channels
+
+
+# In[ ]:
+
+
+plot_waveform(dfp_channels, channel_names, sampling_freq, output_path, inline=False)
 
 
 # In[ ]:

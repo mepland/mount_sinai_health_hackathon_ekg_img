@@ -52,13 +52,13 @@ plot_png=True
 plot_jpg=False
 
 ########################################################
-def plot_waveform(dfp, channel_names, sampling_rate, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5):
+def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800):
 
-	# target_res = 1200 # decent quality
-	target_res = 800 # hackathon setting
+	# target_im_res = 1200 # decent quality
+	# target_im_res = 800 # hackathon setting
 	size_in = 20
 
-	png_dpi = target_res/size_in
+	png_dpi = target_im_res/size_in
 	jpg_dpi = png_dpi
 
 	major_x = 0.2  # seconds
@@ -72,12 +72,12 @@ def plot_waveform(dfp, channel_names, sampling_rate, m_path='output', fname='wav
 	# this_aspect_ratio = 10. / 12. # width / height
 	# fig.set_size_inches(this_aspect_ratio*this_vsize, this_vsize)
 
-	# fig.set_size_inches(target_res / png_dpi, target_res / png_dpi)
+	# fig.set_size_inches(target_im_res / png_dpi, target_im_res / png_dpi)
 	fig.set_size_inches(size_in, size_in)
 
 	n_samples = len(dfp.index)
 
-	data_time_range = n_samples / sampling_rate
+	data_time_range = n_samples / sampling_freq
 	if target_time_range <= data_time_range:
 		# we have enough samples to fill the requested target_time_range
 		time_range = target_time_range
@@ -85,7 +85,7 @@ def plot_waveform(dfp, channel_names, sampling_rate, m_path='output', fname='wav
 		# we do NOT have enough samples to fill the requested target_time_range, use all of the data we have
 		time_range = data_time_range
 
-	n_samples_to_use = int(np.floor(sampling_rate*time_range))
+	n_samples_to_use = int(np.floor(sampling_freq*time_range))
 
 	x = np.linspace(0., float(time_range), n_samples_to_use)
 
