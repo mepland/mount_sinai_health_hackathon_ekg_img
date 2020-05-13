@@ -48,25 +48,26 @@ colors = prop_cycle.by_key()['color']
 # aspect_ratio_single = 4./3.
 # aspect_ratio_multi = 1.
 
-plot_png=True
-plot_jpg=False
+# Move here since these don't change per call of plot_waveform
+size_in = 20
+
+major_x = 0.2  # seconds
+minor_x = 0.04 # seconds
+major_y = 0.5 # mV
+minor_y = 0.1 # mV
 
 ########################################################
-def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800):
+def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False):
+	# setup
 
 	# target_im_res = 1200 # decent quality
 	# target_im_res = 800 # hackathon setting
-	size_in = 20
-
 	png_dpi = target_im_res/size_in
-	jpg_dpi = png_dpi
 
-	major_x = 0.2  # seconds
-	minor_x = 0.04 # seconds
-	major_y = 0.5 # mV
-	minor_y = 0.1 # mV
+	n_channels = len(channel_names)
+	n_samples = len(dfp.index)
 
-	fig, axs = plt.subplots(len(channel_names), sharex=True, sharey=False)
+	fig, axs = plt.subplots(n_channels, sharex=True, sharey=False, num=fname)
 
 	# this_vsize = 20
 	# this_aspect_ratio = 10. / 12. # width / height
@@ -75,25 +76,34 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	# fig.set_size_inches(target_im_res / png_dpi, target_im_res / png_dpi)
 	fig.set_size_inches(size_in, size_in)
 
-	n_samples = len(dfp.index)
+	if not run_parallel:
+		data_time_range = n_samples / sampling_freq
+		if target_time_range <= data_time_range:
+			# we have enough samples to fill the requested target_time_range
+			time_range = target_time_range
+		else:
+			# we do NOT have enough samples to fill the requested target_time_range, use all of the data we have
+			time_range = data_time_range
 
-	data_time_range = n_samples / sampling_freq
-	if target_time_range <= data_time_range:
-		# we have enough samples to fill the requested target_time_range
-		time_range = target_time_range
+		n_samples_to_use = int(np.floor(sampling_freq*time_range))
+
 	else:
-		# we do NOT have enough samples to fill the requested target_time_range, use all of the data we have
-		time_range = data_time_range
-
-	n_samples_to_use = int(np.floor(sampling_freq*time_range))
+		# just set with out checking, would rather have the crash and debug
+		time_range = target_time_range
+		n_samples_to_use = n_samples
 
 	x = np.linspace(0., float(time_range), n_samples_to_use)
 
+	# start plotting
+
 	for ichannel,channel_name in enumerate(channel_names):
-		axs[ichannel].plot(x, dfp[channel_name].iloc[0:n_samples_to_use], c=colors[ ichannel % len(colors) ])
+		if not run_parallel:
+			axs[ichannel].plot(x, dfp[channel_name].iloc[0:n_samples_to_use], c=colors[ ichannel % len(colors) ])
+		else:
+			axs[ichannel].plot(x, dfp[channel_name], c=colors[ ichannel % len(colors) ])
 
 		axs[ichannel].set_ylabel(f'{channel_name} ', rotation='horizontal', ha='right')
-		if ichannel == len(channel_names) - 1:
+		if ichannel == n_channels - 1:
 			axs[ichannel].set_xlabel('Time [S]')
 
 		axs[ichannel].grid(which='major', axis='both', color='#CCCCCC', alpha=1., lw=1)
@@ -102,6 +112,7 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 		axs[ichannel].xaxis.set_ticks_position('none')
 		axs[ichannel].yaxis.set_ticks_position('none')
 
+	# clean up x axis limits and ticks
 	axs[0].set_xlim([0.,float(time_range)])
 
 	n_ticks_major_x = int(np.ceil(time_range / major_x))
@@ -113,13 +124,17 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	axs[0].set_xticks(x_major_ticks)
 	axs[0].set_xticks(x_minor_ticks, minor=True)
 
-	for ichannel in range(len(channel_names)):
+	# clean up y_axis - this takes some doing, to force the minor and major ticks to have the right size and always start at zero
+
+	# first find the automatic y max and min across all of the channels
+	for ichannel in range(n_channels):
 		_y_min_auto, _y_max_auto = axs[ichannel].get_ylim()
 		if ichannel == 0 or _y_min_auto < y_min_auto:
 			y_min_auto = _y_min_auto
 		if ichannel == 0 or y_max_auto < _y_max_auto:
 			y_max_auto = _y_max_auto
 
+	# round max and min to a minor tick, then add one minor tick to each side to be safe
 	y_min = minor_y * (round(y_min_auto / minor_y)-1)
 	y_max = minor_y * (round(y_max_auto / minor_y)+1)
 
@@ -140,18 +155,18 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	y_major_ticks = np.linspace(major_y*int_ticks_major_y_min, major_y*int_ticks_major_y_max, int_ticks_major_y_max-int_ticks_major_y_min+1)
 	y_minor_ticks = np.linspace(minor_y*int_ticks_minor_y_min, minor_y*int_ticks_minor_y_max, int_ticks_minor_y_max-int_ticks_minor_y_min+1)
 
-	for ichannel in range(len(channel_names)):
+	# apply new ticks and y limits
+	for ichannel in range(n_channels):
 		axs[ichannel].set_ylim([y_min,y_max])
 		axs[ichannel].set_yticks(y_major_ticks)
 		axs[ichannel].set_yticks(y_minor_ticks, minor=True)
 
+	# save out
 	plt.tight_layout()
-	if inline:
+	if inline and not run_parallel:
 		fig.show()
 	else:
-		os.makedirs(m_path, exist_ok=True)
-		if plot_png:
-			fig.savefig(f'{m_path}/{fname}{tag}.png', dpi=png_dpi)
-		if plot_jpg:
-			fig.savefig(f'{m_path}/{fname}{tag}.jpg', dpi=jpg_dpi)
+		if not run_parallel:
+			os.makedirs(m_path, exist_ok=True)
+		fig.savefig(f'{m_path}/{fname}{tag}.png', dpi=png_dpi)
 		plt.close('all')
