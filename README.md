@@ -52,8 +52,19 @@ source ~/.venvs/hackathon/bin/activate
 pip install -r requirements.txt
 ```
 
-## Running the Preprocessing Notebook
-
+## Running the Preprocessing Script
+Pick j based on the CPU cores you have avaliable, see `--help` for details.
 ```bash
-jupyter lab preprocessing/waveform_preproc.ipynb
+python -u ekg_preprocessing.py -j 22
+```
+
+## Counting Output Images
+Returns sorted values in CSV format, pipe directly to a file with `> counts.csv` at the end if desired.
+```bash
+cd preprocessing/output/im_res_800
+
+find . -maxdepth 1 -mindepth 1 -type d | while read dir; do
+  printf "\"$dir\"|" | sed -r 's/\.\///g'
+  find "$dir" -type f | wc -l
+done | sort -t '|' -nrk2 | sed -r 's/\|/,/g'
 ```
