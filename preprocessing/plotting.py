@@ -56,8 +56,14 @@ minor_x = 0.04 # seconds
 major_y = 0.5 # mV
 minor_y = 0.1 # mV
 
+y_min_fixed = -2 # mV
+y_max_fixed =  2 # mV
+
+y_major_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_min_fixed)/major_y)+1)
+y_minor_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_min_fixed)/minor_y)+1)
+
 ########################################################
-def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False):
+def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True):
 	# setup
 
 	# target_im_res = 1200 # decent quality
@@ -67,7 +73,7 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	n_channels = len(channel_names)
 	n_samples = len(dfp.index)
 
-	fig, axs = plt.subplots(n_channels, sharex=True, sharey=False, num=fname)
+	fig, axs = plt.subplots(n_channels, sharex=True, sharey=fixed_yaxis_range, num=fname)
 
 	# this_vsize = 20
 	# this_aspect_ratio = 10. / 12. # width / height
@@ -124,42 +130,51 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	axs[0].set_xticks(x_major_ticks)
 	axs[0].set_xticks(x_minor_ticks, minor=True)
 
-	# clean up y_axis - this takes some doing, to force the minor and major ticks to have the right size and always start at zero
-
-	# first find the automatic y max and min across all of the channels
-	for ichannel in range(n_channels):
-		_y_min_auto, _y_max_auto = axs[ichannel].get_ylim()
-		if ichannel == 0 or _y_min_auto < y_min_auto:
-			y_min_auto = _y_min_auto
-		if ichannel == 0 or y_max_auto < _y_max_auto:
-			y_max_auto = _y_max_auto
-
-	# round max and min to a minor tick, then add one minor tick to each side to be safe
-	y_min = minor_y * (round(y_min_auto / minor_y)-1)
-	y_max = minor_y * (round(y_max_auto / minor_y)+1)
-
-	if y_min < 0:
-		int_ticks_major_y_min = int(np.ceil( y_min / major_y))
-		int_ticks_minor_y_min = int(np.ceil( y_min / minor_y))
+	# clean up y_axis
+	if fixed_yaxis_range:
+		# apply new ticks and y limits
+		axs[0].set_ylim([y_min_fixed,y_max_fixed])
+		axs[0].set_yticks(y_major_ticks_fixed)
+		if show_y_minor_grid:
+			axs[0].set_yticks(y_minor_ticks_fixed, minor=True)
 	else:
-		int_ticks_major_y_min = int(np.floor(y_min / major_y))
-		int_ticks_minor_y_min = int(np.floor(y_min / minor_y))
+		# auto scale the y axis limits. This takes some doing to force the minor and major ticks to have the right size and always start at zero
 
-	if y_max < 0:
-		int_ticks_major_y_max = int(np.ceil(y_max / major_y))
-		int_ticks_minor_y_max = int(np.ceil(y_max / minor_y))
-	else:
-		int_ticks_major_y_max = int(np.floor( y_max / major_y))
-		int_ticks_minor_y_max = int(np.floor( y_max / minor_y))
+		# first find the automatic y max and min across all of the channels
+		for ichannel in range(n_channels):
+			_y_min_auto, _y_max_auto = axs[ichannel].get_ylim()
+			if ichannel == 0 or _y_min_auto < y_min_auto:
+				y_min_auto = _y_min_auto
+			if ichannel == 0 or y_max_auto < _y_max_auto:
+				y_max_auto = _y_max_auto
 
-	y_major_ticks = np.linspace(major_y*int_ticks_major_y_min, major_y*int_ticks_major_y_max, int_ticks_major_y_max-int_ticks_major_y_min+1)
-	y_minor_ticks = np.linspace(minor_y*int_ticks_minor_y_min, minor_y*int_ticks_minor_y_max, int_ticks_minor_y_max-int_ticks_minor_y_min+1)
+		# round max and min to a minor tick, then add one minor tick to each side to be safe
+		y_min = minor_y * (round(y_min_auto / minor_y)-1)
+		y_max = minor_y * (round(y_max_auto / minor_y)+1)
 
-	# apply new ticks and y limits
-	for ichannel in range(n_channels):
-		axs[ichannel].set_ylim([y_min,y_max])
-		axs[ichannel].set_yticks(y_major_ticks)
-		axs[ichannel].set_yticks(y_minor_ticks, minor=True)
+		if y_min < 0:
+			int_ticks_major_y_min = int(np.ceil( y_min / major_y))
+			int_ticks_minor_y_min = int(np.ceil( y_min / minor_y))
+		else:
+			int_ticks_major_y_min = int(np.floor(y_min / major_y))
+			int_ticks_minor_y_min = int(np.floor(y_min / minor_y))
+
+		if y_max < 0:
+			int_ticks_major_y_max = int(np.ceil(y_max / major_y))
+			int_ticks_minor_y_max = int(np.ceil(y_max / minor_y))
+		else:
+			int_ticks_major_y_max = int(np.floor( y_max / major_y))
+			int_ticks_minor_y_max = int(np.floor( y_max / minor_y))
+
+		y_major_ticks = np.linspace(major_y*int_ticks_major_y_min, major_y*int_ticks_major_y_max, int_ticks_major_y_max-int_ticks_major_y_min+1)
+		y_minor_ticks = np.linspace(minor_y*int_ticks_minor_y_min, minor_y*int_ticks_minor_y_max, int_ticks_minor_y_max-int_ticks_minor_y_min+1)
+
+		# apply new ticks and y limits
+		for ichannel in range(n_channels):
+			axs[ichannel].set_ylim([y_min,y_max])
+			axs[ichannel].set_yticks(y_major_ticks)
+			if show_y_minor_grid:
+				axs[ichannel].set_yticks(y_minor_ticks, minor=True)
 
 	# save out
 	plt.tight_layout()
@@ -168,5 +183,8 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	else:
 		if not run_parallel:
 			os.makedirs(m_path, exist_ok=True)
-		fig.savefig(f'{m_path}/{fname}{tag}.png', dpi=png_dpi)
+			fig.savefig(f'{m_path}/{fname}{tag}.pdf')
+			fig.savefig(f'{m_path}/{fname}{tag}.png', dpi=png_dpi)
+		else:
+			fig.savefig(f'{m_path}/{fname}.png', dpi=png_dpi)
 		plt.close('all')
