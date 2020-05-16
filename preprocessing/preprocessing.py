@@ -20,7 +20,7 @@ from plotting_preprocessing import * # load plotting code
 
 ########################################################
 # function to process a list of ekgs, in parallel
-def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, sampling_freq, channel_names, tranche):
+def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, sampling_freq, channel_names, drop_multi, tranche):
 	n_channels = len(channel_names)
 	n_samples_per_slice = int(np.ceil(sampling_freq*slice_time_range))
 	obs_Dx = []
@@ -48,6 +48,12 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, s
 
 			# get Dx
 			Dx = header_data[15].replace('#Dx: ', '')
+			if drop_multi:
+				if ',' in Dx:
+					# This Dx str has more than one Dx, skip it
+					continue
+				else:
+					Dx = Dx.replace(',', '_')
 
 			# get channel y values
 			ch_values = {}
@@ -101,7 +107,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Author: Matthew Epland', formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30))
 
 	parser.add_argument('-i', '--input_path', dest='input_path', type=str, default='../data/PhysioNetChallenge2020_Training_CPSC/Training_WFDB', help='Path to top level directory containing the PhysioNet data.')
-	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='../data/preprocessed', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}.')
+	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='../data/preprocessed', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}/all.')
 	parser.add_argument('-n', '--n_ekg_to_process', dest='n_ekg_to_process', type=int, default=-1, help='Number of input EKGs to process, -1 is all.')
 	parser.add_argument('-s', '--size', dest='im_res', type=int, default=800, help='Size of output image (800 produces a 800x800 image).')
 	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=5., help='Length of time to sample from an EKG (seconds).')
@@ -109,6 +115,7 @@ if __name__ == '__main__':
 	parser.add_argument('--sampling_freq', dest='sampling_freq', type=int, default=500, help='EKG ADC sampling frequency (Hz).')
 	parser.add_argument('-j', '--processes', dest='n_processes', type=int, default=1, help='Number of sub-processes run in parallel.')
 	parser.add_argument('--n_tranches', dest='n_tranches', type=int, default=-1, help='Number of tranches to create for parallel processing, -1 creates 100*n_processes.')
+	parser.add_argument('--drop_multi', dest='drop_multi', action='count', default=1, help='Drop images with multiple Dx.')
 	parser.add_argument('--seed', dest='rnd_seed', type=int, default=42, help='Random seed for reproducibility.')
 	parser.add_argument('-v','--verbose', dest='verbose', action='count', default=0, help='Enable verbose output.')
 	parser.add_argument('--debug', dest='debug', action='count', default=0, help='Enable single treaded debugging.')
@@ -126,6 +133,7 @@ if __name__ == '__main__':
 	sampling_freq = args.sampling_freq
 	n_processes = args.n_processes
 	n_tranches = args.n_tranches
+	drop_multi = args.drop_multi
 	rnd_seed = args.rnd_seed
 	verbose = bool(args.verbose)
 	debug = bool(args.debug)
@@ -151,7 +159,7 @@ if __name__ == '__main__':
 	# setup variables
 	channel_names = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'] # TODo hard coded
 
-	output_path = f'{output_path}/im_res_{im_res}'
+	output_path = f'{output_path}/im_res_{im_res}/all'
 
 	np.random.seed(rnd_seed)
 
@@ -194,7 +202,7 @@ if __name__ == '__main__':
 	# actually run
 	print(f'n_cores = {n_cores}, using n_processes = {n_processes} for n_tranches = {n_tranches}')
 
-	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, n_slices_max, sampling_freq, channel_names)
+	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, n_slices_max, sampling_freq, drop_multi, channel_names)
 
 	if debug:
 		# single threaded debugging
