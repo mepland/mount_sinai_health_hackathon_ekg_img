@@ -5,6 +5,9 @@ import numpy as np
 # import math
 # from collections import OrderedDict
 
+import io
+from PIL import Image
+
 ########################################################
 # plotting
 import matplotlib as mpl
@@ -56,14 +59,14 @@ minor_x = 0.04 # seconds
 major_y = 0.5 # mV
 minor_y = 0.1 # mV
 
-y_min_fixed = -2 # mV
-y_max_fixed =  2 # mV
+y_min_fixed = -3 # mV
+y_max_fixed =  3 # mV
 
 y_major_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_min_fixed)/major_y)+1)
 y_minor_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_min_fixed)/minor_y)+1)
 
 ########################################################
-def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True, show_axes_and_tick_labels=True):
+def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True, show_axes_labels=True, show_tick_labels=True, use_color=False, grid_layout=(6,2)):
 	# setup
 
 	# target_im_res = 1200 # decent quality
@@ -73,7 +76,14 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	n_channels = len(channel_names)
 	n_samples = len(dfp.index)
 
-	fig, axs = plt.subplots(n_channels, sharex=True, sharey=fixed_yaxis_range, num=fname)
+	n_grid_rows = grid_layout[0]
+	n_grid_cols = grid_layout[1]
+	channel_locs = [(i,j) for i in range(n_grid_rows) for j in range(n_grid_cols)]
+
+	if not use_color:
+		plt.style.use('grayscale')
+
+	fig, axs = plt.subplots(n_grid_rows, n_grid_cols, sharex=True, sharey=fixed_yaxis_range, num=fname)
 
 	# this_vsize = 20
 	# this_aspect_ratio = 10. / 12. # width / height
@@ -102,57 +112,72 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 
 	# start plotting
 
-	bottom_channel = [n_channels - 1] # TODO
+	bottom_channels = [ichannel for ichannel,channel_loc in enumerate(channel_locs) if channel_loc[0] == n_grid_rows-1]
 
 	for ichannel,channel_name in enumerate(channel_names):
+		irow, icol = channel_locs[ichannel]
+
+		if use_color:
+			color = colors[ ichannel % len(colors) ]
+		else:
+			color = 'black'
+
 		if not run_parallel:
-			axs[ichannel].plot(x, dfp[channel_name].iloc[0:n_samples_to_use], c=colors[ ichannel % len(colors) ])
+			axs[irow][icol].plot(x, dfp[channel_name].iloc[0:n_samples_to_use], c=color)
 		else:
-			axs[ichannel].plot(x, dfp[channel_name], c=colors[ ichannel % len(colors) ])
+			axs[irow][icol].plot(x, dfp[channel_name], c=color)
 
-		if show_axes_and_tick_labels:
-			axs[ichannel].set_ylabel(f'{channel_name} ', rotation='horizontal', ha='right')
-			if ichannel in bottom_channel:
-				axs[ichannel].set_xlabel('Time [S]')
-		else:
-			axs[ichannel].set_yticklabels([])
-			if ichannel in bottom_channel:
-				axs[ichannel].set_xticklabels([])
+		if show_axes_labels:
+			axs[irow][icol].set_ylabel(f'{channel_name} ', rotation='horizontal', ha='right')
+			if ichannel in bottom_channels:
+				axs[irow][icol].set_xlabel('Time [S]')
 
-		axs[ichannel].grid(which='major', axis='both', color='#CCCCCC', alpha=1., lw=1)
-		axs[ichannel].grid(which='minor', axis='both', color='#CCCCCC', alpha=0.5, lw=0.6)
+		if not show_tick_labels:
+			axs[irow][icol].set_yticklabels([])
+			if ichannel in bottom_channels:
+				axs[irow][icol].set_xticklabels([])
 
-		axs[ichannel].xaxis.set_ticks_position('none')
-		axs[ichannel].yaxis.set_ticks_position('none')
+		axs[irow][icol].grid(which='major', axis='both', color='#CCCCCC', alpha=1., lw=1)
+		axs[irow][icol].grid(which='minor', axis='both', color='#CCCCCC', alpha=0.5, lw=0.6)
+
+		axs[irow][icol].xaxis.set_ticks_position('none')
+		axs[irow][icol].yaxis.set_ticks_position('none')
 
 	# clean up x axis limits and ticks
-	axs[0].set_xlim([0.,float(time_range)])
+	x_major_ticks = []
+	i = 0
+	while major_x*i <= time_range:
+		x_major_ticks.append(major_x*i)
+		i += 1
 
-	n_ticks_major_x = int(np.ceil(time_range / major_x))
-	x_major_ticks = np.linspace(0., time_range, n_ticks_major_x+1)
+	x_minor_ticks = []
+	i = 0
+	while minor_x*i <= time_range:
+		x_minor_ticks.append(minor_x*i)
+		i += 1
 
-	n_ticks_minor_x = int(np.ceil(time_range / minor_x))
-	x_minor_ticks = np.linspace(0., time_range, n_ticks_minor_x+1)
+	for ibottom_channel in bottom_channels:
+		irow, icol = channel_locs[ibottom_channel]
 
-	axs[0].set_xticks(x_major_ticks)
-	axs[0].set_xticks(x_minor_ticks, minor=True)
+		axs[irow][icol].set_xlim([0.,float(time_range)])
+		axs[irow][icol].set_xticks(x_major_ticks)
+		axs[irow][icol].set_xticks(x_minor_ticks, minor=True)
 
 	# clean up y_axis
 	if fixed_yaxis_range:
-		# apply new ticks and y limits
-		axs[0].set_ylim([y_min_fixed,y_max_fixed])
-		axs[0].set_yticks(y_major_ticks_fixed)
-		if show_y_minor_grid:
-			axs[0].set_yticks(y_minor_ticks_fixed, minor=True)
-		else:
-			axs[0].set_yticks([], minor=True)
+		y_min = y_min_fixed
+		y_max = y_max_fixed
+		y_major_ticks = y_major_ticks_fixed
+		y_minor_ticks = y_minor_ticks_fixed
 
 	else:
 		# auto scale the y axis limits. This takes some doing to force the minor and major ticks to have the right size and always start at zero
 
 		# first find the automatic y max and min across all of the channels
 		for ichannel in range(n_channels):
-			_y_min_auto, _y_max_auto = axs[ichannel].get_ylim()
+			irow, icol = channel_locs[ichannel]
+
+			_y_min_auto, _y_max_auto = axs[irow][icol].get_ylim()
 			if ichannel == 0 or _y_min_auto < y_min_auto:
 				y_min_auto = _y_min_auto
 			if ichannel == 0 or y_max_auto < _y_max_auto:
@@ -179,22 +204,37 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 		y_major_ticks = np.linspace(major_y*int_ticks_major_y_min, major_y*int_ticks_major_y_max, int_ticks_major_y_max-int_ticks_major_y_min+1)
 		y_minor_ticks = np.linspace(minor_y*int_ticks_minor_y_min, minor_y*int_ticks_minor_y_max, int_ticks_minor_y_max-int_ticks_minor_y_min+1)
 
-		# apply new ticks and y limits
-		for ichannel in range(n_channels):
-			axs[ichannel].set_ylim([y_min,y_max])
-			axs[ichannel].set_yticks(y_major_ticks)
-			if show_y_minor_grid:
-				axs[ichannel].set_yticks(y_minor_ticks, minor=True)
+	# apply new ticks and y limits
+	for ichannel in range(n_channels):
+		irow, icol = channel_locs[ichannel]
+		axs[irow][icol].set_ylim([y_min,y_max])
+		axs[irow][icol].set_yticks(y_major_ticks)
+		if show_y_minor_grid:
+			axs[irow][icol].set_yticks(y_minor_ticks, minor=True)
+		else:
+			axs[irow][icol].set_yticks([], minor=True)
 
 	# save out
-	plt.tight_layout()
+	if not show_axes_labels and not show_tick_labels:
+		fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+	else:
+		plt.tight_layout()
+
 	if inline and not run_parallel:
 		fig.show(warn=False)
 	else:
 		if not run_parallel:
 			os.makedirs(m_path, exist_ok=True)
 			fig.savefig(f'{m_path}/{fname}{tag}.pdf')
+
+		if use_color:
 			fig.savefig(f'{m_path}/{fname}{tag}.png', dpi=png_dpi)
 		else:
-			fig.savefig(f'{m_path}/{fname}.png', dpi=png_dpi)
+			buf = io.BytesIO()
+			fig.savefig(buf, format='png', dpi=png_dpi)
+			buf.seek(0)
+			im = Image.open(buf).convert('L') # For modes see: https://pillow.readthedocs.io/en/latest/handbook/concepts.html?highlight=modes#modes
+			im.save(f'{m_path}/{fname}{tag}_PIL.png', 'PNG')
+			buf.close()
+
 		plt.close('all')
