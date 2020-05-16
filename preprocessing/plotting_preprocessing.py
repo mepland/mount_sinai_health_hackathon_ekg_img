@@ -63,7 +63,7 @@ y_major_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_m
 y_minor_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_min_fixed)/minor_y)+1)
 
 ########################################################
-def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True):
+def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True, show_axes_and_tick_labels=True):
 	# setup
 
 	# target_im_res = 1200 # decent quality
@@ -102,15 +102,22 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 
 	# start plotting
 
+	bottom_channel = [n_channels - 1] # TODO
+
 	for ichannel,channel_name in enumerate(channel_names):
 		if not run_parallel:
 			axs[ichannel].plot(x, dfp[channel_name].iloc[0:n_samples_to_use], c=colors[ ichannel % len(colors) ])
 		else:
 			axs[ichannel].plot(x, dfp[channel_name], c=colors[ ichannel % len(colors) ])
 
-		axs[ichannel].set_ylabel(f'{channel_name} ', rotation='horizontal', ha='right')
-		if ichannel == n_channels - 1:
-			axs[ichannel].set_xlabel('Time [S]')
+		if show_axes_and_tick_labels:
+			axs[ichannel].set_ylabel(f'{channel_name} ', rotation='horizontal', ha='right')
+			if ichannel in bottom_channel:
+				axs[ichannel].set_xlabel('Time [S]')
+		else:
+			axs[ichannel].set_yticklabels([])
+			if ichannel in bottom_channel:
+				axs[ichannel].set_xticklabels([])
 
 		axs[ichannel].grid(which='major', axis='both', color='#CCCCCC', alpha=1., lw=1)
 		axs[ichannel].grid(which='minor', axis='both', color='#CCCCCC', alpha=0.5, lw=0.6)
@@ -137,6 +144,9 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 		axs[0].set_yticks(y_major_ticks_fixed)
 		if show_y_minor_grid:
 			axs[0].set_yticks(y_minor_ticks_fixed, minor=True)
+		else:
+			axs[0].set_yticks([], minor=True)
+
 	else:
 		# auto scale the y axis limits. This takes some doing to force the minor and major ticks to have the right size and always start at zero
 
@@ -179,7 +189,7 @@ def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='wav
 	# save out
 	plt.tight_layout()
 	if inline and not run_parallel:
-		fig.show()
+		fig.show(warn=False)
 	else:
 		if not run_parallel:
 			os.makedirs(m_path, exist_ok=True)
