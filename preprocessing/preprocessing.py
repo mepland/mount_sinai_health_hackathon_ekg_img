@@ -16,7 +16,7 @@ import numpy as np
 
 from scipy.io import loadmat
 
-from plotting import * # load plotting code
+from plotting_preprocessing import * # load plotting code
 
 ########################################################
 # function to process a list of ekgs, in parallel
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Author: Matthew Epland', formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30))
 
 	parser.add_argument('-i', '--input_path', dest='input_path', type=str, default='../data/PhysioNetChallenge2020_Training_CPSC/Training_WFDB', help='Path to top level directory containing the PhysioNet data.')
-	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='./output', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}.')
+	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='../data/preprocessed', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}.')
 	parser.add_argument('-n', '--n_ekg_to_process', dest='n_ekg_to_process', type=int, default=-1, help='Number of input EKGs to process, -1 is all.')
 	parser.add_argument('-s', '--size', dest='im_res', type=int, default=800, help='Size of output image (800 produces a 800x800 image).')
 	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=5., help='Length of time to sample from an EKG (seconds).')
