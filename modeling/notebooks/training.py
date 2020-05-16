@@ -19,8 +19,7 @@ sys.path.append(os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/'))
 from common_code import *
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-# import copy
-# import itertools
+from sklearn.metrics import confusion_matrix
 
 import torchvision.models as models
 from torchvision import datasets, transforms
@@ -61,7 +60,7 @@ model_name = 'resnet'
 n_classes = len(Dx_classes.keys())
 
 # Batch size for training (change depending on how much memory you have)
-batch_size = 8
+batch_size = 256
 
 # Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch.
 # Should probably remain True.
@@ -201,6 +200,8 @@ model.to(device);
 # In[ ]:
 
 
+# TODO is all of this needed?
+
 # Gather the parameters to be optimized/updated in this run.
 # If we are finetuning we will be updating all parameters
 # However, if we are usingthe  feature extract method, we will only update the parameters that we have just initialized,
@@ -223,7 +224,6 @@ else:
 # In[ ]:
 
 
-# Observe that all parameters are being optimized
 optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 # optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
 
@@ -232,10 +232,6 @@ optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 # # Load Data
 
 # ### Compute Normalization Factors
-
-# In[ ]:
-
-
 dl_unnormalized = torch.utils.data.DataLoader(
     tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/all',
                             transform=transforms.Compose([transforms.Resize(input_size), transforms.ToTensor()])),
@@ -246,8 +242,6 @@ pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
 
 print(f'pop_mean = {pop_mean}')
 print(f'pop_std0 = {pop_std0}')
-
-
 # In[ ]:
 
 
@@ -310,8 +304,8 @@ dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=Fa
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=40,
-do_es=True, es_min_val_per_improvement=0.005, es_epochs=5,
+max_epochs=100,
+do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=6,
 )
 
@@ -362,7 +356,100 @@ load_model(model, device, best_epoch, model_name, models_path)
 # ***
 # # TODO
 
+# In[ ]:
+
+
+def eval_model(model, dl, device):
+    all_labels = []
+    all_preds = []
+    model.eval()
+    for (inputs, labels) in dl:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            outputs = model(inputs)
+
+            _, preds = torch.max(outputs, 1)
+
+            all_labels.append(labels.cpu().numpy())
+            all_preds.append(preds.cpu().numpy())
+
+    all_labels = np.concatenate(all_labels).ravel()
+    all_preds = np.concatenate(all_preds).ravel()
+
+    return all_labels, all_preds
+
+
+# In[ ]:
+
+
+labels, preds = eval_model(model, dl_test, device)
+
+
+# In[ ]:
+
+
+# labels
+
+
+# In[ ]:
+
+
+# preds
+
+
 # ### Confusion Matrix
+
+# In[ ]:
+
+
+conf_matrix = confusion_matrix(labels, preds)
+
+
+# In[ ]:
+
+
+conf_matrix
+
+
+# In[ ]:
+
+
+import itertools
+
+def plot_confusion_matrix(cm, classes, normalize=False, title="CM"):
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    #Plot matrix
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    #Format number color according to threshold
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    #Add labels
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+
+
+# In[ ]:
+
+
+plt.figure()
+plot_confusion_matrix(conf_matrix, classes=idx_to_class.values(), title='Confusion matrix, without normalization')
+plt.show()
+
 
 # ***
 # # Dev
