@@ -9,7 +9,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 # ***
 # # Setup
 
-# In[ ]:
+# In[1]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -26,7 +26,7 @@ from torchvision import datasets, transforms
 # from sklearn.metrics import confusion_matrix
 
 
-# In[ ]:
+# In[2]:
 
 
 Dx_classes = {
@@ -42,7 +42,7 @@ Dx_classes = {
 }
 
 
-# In[ ]:
+# In[3]:
 
 
 # Check if gpu support is available
@@ -50,7 +50,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'device = {device}')
 
 
-# In[ ]:
+# In[4]:
 
 
 # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
@@ -76,14 +76,14 @@ data_path = os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/data')
 im_res = 800
 
 
-# In[ ]:
+# In[5]:
 
 
 output_path = f'../output/{model_name}'
 models_path = f'../models/{model_name}'
 
 
-# In[ ]:
+# In[6]:
 
 
 # test_mem()
@@ -92,7 +92,7 @@ models_path = f'../models/{model_name}'
 # ***
 # ### Helper Functions
 
-# In[ ]:
+# In[7]:
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -104,7 +104,7 @@ def set_parameter_requires_grad(model, feature_extracting):
 # ***
 # # Create the Model
 
-# In[ ]:
+# In[8]:
 
 
 def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True):
@@ -177,19 +177,19 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
     return model_ft, input_size
 
 
-# In[ ]:
+# In[9]:
 
 
 model, input_size = initialize_model(model_name, n_classes, feature_extract, use_pretrained)
 
 
-# In[ ]:
+# In[10]:
 
 
 print(f'input_size = {input_size}')
 
 
-# In[ ]:
+# In[11]:
 
 
 loss_fn = nn.CrossEntropyLoss()
@@ -197,7 +197,7 @@ loss_fn = nn.CrossEntropyLoss()
 model.to(device);
 
 
-# In[ ]:
+# In[12]:
 
 
 # TODO is all of this needed?
@@ -221,7 +221,7 @@ else:
             print(name)
 
 
-# In[ ]:
+# In[13]:
 
 
 optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
@@ -242,7 +242,7 @@ pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
 
 print(f'pop_mean = {pop_mean}')
 print(f'pop_std0 = {pop_std0}')
-# In[ ]:
+# In[14]:
 
 
 # use normalization results computed earlier
@@ -255,7 +255,7 @@ else:
 
 # ### Actually Load Data
 
-# In[ ]:
+# In[15]:
 
 
 transform = transforms.Compose([transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(pop_mean, pop_std0)])
@@ -265,7 +265,7 @@ ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}
 ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
 
 
-# In[ ]:
+# In[16]:
 
 
 class_to_idx = {}
@@ -275,7 +275,7 @@ class_to_idx = OrderedDict(sorted(class_to_idx.items(), key=lambda x: x))
 idx_to_class = OrderedDict([[v,k] for k,v in class_to_idx.items()])
 
 
-# In[ ]:
+# In[17]:
 
 
 dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=False, num_workers=8)
@@ -283,7 +283,7 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=Fals
 dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, num_workers=8)
 
 
-# In[ ]:
+# In[18]:
 
 
 # test_mem()
@@ -292,25 +292,25 @@ dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=Fa
 # ***
 # # Train
 
-# In[ ]:
+# In[19]:
 
 
 # test_mem()
 
 
-# In[ ]:
+# In[20]:
 
 
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=100,
+max_epochs=200,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=6,
 )
 
 
-# In[ ]:
+# In[21]:
 
 
 write_dfp(dfp_train_results, output_path , 'train_results', tag='',
@@ -321,20 +321,20 @@ sort_by=['epoch'], sort_by_ascending=True)
 # ***
 # # Eval
 
-# In[ ]:
+# In[22]:
 
 
 dfp_train_results = load_dfp(output_path, 'train_results', tag='', cols_bool=['saved_model'],
                              cols_float=['train_loss','val_loss','best_val_loss','delta_per_best','elapsed_time','epoch_time'])
 
 
-# In[ ]:
+# In[23]:
 
 
 dfp_train_results
 
 
-# In[ ]:
+# In[24]:
 
 
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
@@ -346,7 +346,7 @@ plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag=''
 
 # ### Load model from disk
 
-# In[ ]:
+# In[25]:
 
 
 best_epoch = dfp_train_results.iloc[dfp_train_results['val_loss'].idxmin()]['epoch']
@@ -356,7 +356,7 @@ load_model(model, device, best_epoch, model_name, models_path)
 # ***
 # # TODO
 
-# In[ ]:
+# In[26]:
 
 
 def eval_model(model, dl, device):
@@ -380,19 +380,19 @@ def eval_model(model, dl, device):
     return all_labels, all_preds
 
 
-# In[ ]:
+# In[27]:
 
 
 labels, preds = eval_model(model, dl_test, device)
 
 
-# In[ ]:
+# In[28]:
 
 
 # labels
 
 
-# In[ ]:
+# In[29]:
 
 
 # preds
@@ -400,19 +400,19 @@ labels, preds = eval_model(model, dl_test, device)
 
 # ### Confusion Matrix
 
-# In[ ]:
+# In[30]:
 
 
 conf_matrix = confusion_matrix(labels, preds)
 
 
-# In[ ]:
+# In[31]:
 
 
-conf_matrix
+# conf_matrix
 
 
-# In[ ]:
+# In[32]:
 
 
 import itertools
@@ -443,7 +443,7 @@ def plot_confusion_matrix(cm, classes, normalize=False, title="CM"):
     plt.tight_layout()
 
 
-# In[ ]:
+# In[33]:
 
 
 plt.figure()
