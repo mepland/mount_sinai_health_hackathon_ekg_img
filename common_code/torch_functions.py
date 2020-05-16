@@ -32,15 +32,15 @@ def compute_channel_norms(dl, do_std1=False):
 	pop_mean = []
 	pop_std0 = []
 	pop_std1 = []
-	for (images, _) in tqdm(dl, desc='Minibatch'):
+	for (inputs, _) in tqdm(dl, desc='Minibatch'):
 		# shape = (batch_size, 3, im_res, im_res)
-		numpy_images = images.numpy()
+		numpy_inputs = inputs.numpy()
 
 		# shape = (3,)
-		batch_mean = np.mean(numpy_images, axis=(0,2,3))
-		batch_std0 = np.std(numpy_images, axis=(0,2,3))
+		batch_mean = np.mean(numpy_inputs, axis=(0,2,3))
+		batch_std0 = np.std(numpy_inputs, axis=(0,2,3))
 		if do_std1:
-			batch_std1 = np.std(numpy_images, axis=(0,2,3), ddof=1)
+			batch_std1 = np.std(numpy_inputs, axis=(0,2,3), ddof=1)
 
 		pop_mean.append(batch_mean)
 		pop_std0.append(batch_std0)
@@ -81,22 +81,22 @@ def decay_lr(optimizer, epoch, initial_lr=0.001, lr_epoch_period=30, lr_n_period
 def get_loss(dl, model, loss_fn, device, model_is_autoencoder=False):
 	model.eval()
 	total_loss = 0.0
-	for (images, labels) in dl:
-		images = images.to(device)
+	for (inputs, labels) in dl:
+		inputs = inputs.to(device)
 		if not model_is_autoencoder:
 			labels = labels.to(device)
 
-		# apply model and compute loss using images from the dataloader dl
-		outputs = model(images)
+		# apply model and compute loss using inputs from the dataloader dl
+		outputs = model(inputs)
 		if not model_is_autoencoder:
 			loss = loss_fn(outputs, labels)
 		else:
-			loss = loss_fn(outputs, images)
+			loss = loss_fn(outputs, inputs)
 
-		total_loss += loss.cpu().data.item() * images.size(0) # mean loss of batch * number of images in batch = sum of per image losses
+		total_loss += loss.cpu().data.item() * inputs.size(0) # mean loss of batch * number of inputs in batch = sum of per input losses
 
-	# Compute the mean loss over all images
-	mean_loss = total_loss / len(dl.dataset) # sum of per image losses / n images
+	# Compute the mean loss over all inputs
+	mean_loss = total_loss / len(dl.dataset) # sum of per input losses / n inputs
 
 	return mean_loss
 
@@ -124,10 +124,10 @@ model_is_autoencoder=False,
 
 		model.train()
 
-		# for (images, _) in tqdm(dl_train, desc='Minibatch', position=1): # works, but keeps repeating this pbar
-		for (images, labels) in dl_train:
-			# Move images to gpu if available
-			images = images.to(device)
+		# for (inputs, _) in tqdm(dl_train, desc='Minibatch', position=1): # works, but keeps repeating this pbar
+		for (inputs, labels) in dl_train:
+			# Move inputs to gpu if available
+			inputs = inputs.to(device)
 			if not model_is_autoencoder:
 				labels = labels.to(device)
 
@@ -135,12 +135,12 @@ model_is_autoencoder=False,
 			optimizer.zero_grad()
 
 			# forward
-			outputs = model(images)
+			outputs = model(inputs)
 
 			if not model_is_autoencoder:
 				loss = loss_fn(outputs, labels)
 			else:
-				loss = loss_fn(outputs, images)
+				loss = loss_fn(outputs, inputs)
 
 			# Backpropagate the loss
 			loss.backward()
