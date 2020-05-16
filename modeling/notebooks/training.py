@@ -292,13 +292,13 @@ dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=Fa
 # ***
 # # Train
 
-# In[19]:
+# In[ ]:
 
 
 # test_mem()
 
 
-# In[20]:
+# In[ ]:
 
 
 dfp_train_results = train_model(dl_train, dl_val,
@@ -310,7 +310,7 @@ do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=6,
 )
 
 
-# In[21]:
+# In[ ]:
 
 
 write_dfp(dfp_train_results, output_path , 'train_results', tag='',
@@ -321,78 +321,53 @@ sort_by=['epoch'], sort_by_ascending=True)
 # ***
 # # Eval
 
-# In[22]:
+# In[19]:
 
 
 dfp_train_results = load_dfp(output_path, 'train_results', tag='', cols_bool=['saved_model'],
                              cols_float=['train_loss','val_loss','best_val_loss','delta_per_best','elapsed_time','epoch_time'])
 
 
-# In[23]:
+# In[20]:
 
 
 dfp_train_results
 
 
-# In[24]:
+# In[21]:
 
 
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
                    ann_text_std_add=None,
-                   y_axis_params={'log': True},
+                   y_axis_params={'log': False},
                    loss_cols=['train_loss', 'val_loss'],
                   )
 
 
 # ### Load model from disk
 
-# In[25]:
+# In[22]:
 
 
 best_epoch = dfp_train_results.iloc[dfp_train_results['val_loss'].idxmin()]['epoch']
 load_model(model, device, best_epoch, model_name, models_path)
 
 
-# ***
-# # TODO
+# ### Make Predictions
 
-# In[26]:
-
-
-def eval_model(model, dl, device):
-    all_labels = []
-    all_preds = []
-    model.eval()
-    for (inputs, labels) in dl:
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-
-            outputs = model(inputs)
-
-            _, preds = torch.max(outputs, 1)
-
-            all_labels.append(labels.cpu().numpy())
-            all_preds.append(preds.cpu().numpy())
-
-    all_labels = np.concatenate(all_labels).ravel()
-    all_preds = np.concatenate(all_preds).ravel()
-
-    return all_labels, all_preds
+# In[23]:
 
 
-# In[27]:
+labels, preds = get_preds(dl_test, model, device)
 
 
-labels, preds = eval_model(model, dl_test, device)
-
-
-# In[28]:
+# In[24]:
 
 
 # labels
 
 
-# In[29]:
+# In[25]:
 
 
 # preds
@@ -400,55 +375,28 @@ labels, preds = eval_model(model, dl_test, device)
 
 # ### Confusion Matrix
 
-# In[30]:
+# In[26]:
 
 
 conf_matrix = confusion_matrix(labels, preds)
 
 
-# In[31]:
+# In[27]:
 
 
 # conf_matrix
 
 
-# In[32]:
+# In[28]:
 
 
-import itertools
+# from common_code import *
 
-def plot_confusion_matrix(cm, classes, normalize=False, title="CM"):
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-
-    #Plot matrix
-    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-
-    #Format number color according to threshold
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-
-    #Add labels
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.tight_layout()
-
-
-# In[33]:
-
-
-plt.figure()
-plot_confusion_matrix(conf_matrix, classes=idx_to_class.values(), title='Confusion matrix, without normalization')
-plt.show()
+plot_confusion_matrix(conf_matrix, label_names=idx_to_class.values(),
+                      m_path=output_path, tag='', inline=True,
+                      ann_text_std_add=None,
+                      normalize=True,
+                     )
 
 
 # ***

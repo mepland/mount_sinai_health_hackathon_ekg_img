@@ -1,6 +1,7 @@
 # python
 from operator import itemgetter
 # import collections
+import itertools
 # from itertools import cycle
 # import logging
 # logging.basicConfig(level=logging.WARNING)
@@ -185,7 +186,7 @@ def ann_and_save(_fig, ann_texts, inline, m_path, fname, tag, ann_text_origin_x=
 
 	_fig.tight_layout()
 	if inline:
-		_fig.show()
+		_fig.show(warn=False)
 	else:
 		os.makedirs(m_path, exist_ok=True)
 		if plot_png:
@@ -407,7 +408,7 @@ range=[[binning.get('x', {}).get('min', None), binning.get('x', {}).get('max', N
 	x_axis_params['axis_label'] = x_label
 	y_axis_params['axis_label'] = y_label
 
-	fig.colorbar(image, ax=ax, label=f'{z_label}{bin_size_ann}');
+	fig.colorbar(image, ax=ax, label=f'{z_label}{bin_size_ann}')
 
 	clean_ax(ax, x_axis_params, y_axis_params)
 	set_ax_limits(ax, x_axis_params, y_axis_params)
@@ -600,6 +601,52 @@ def plot_loss_vs_epoch(dfp_train_results, m_path, fname='loss_vs_epoch', tag='',
 
 	leg = ax.legend(loc='upper right',frameon=False)
 	leg.get_frame().set_facecolor('none')
+
+	clean_ax(ax, x_axis_params, y_axis_params)
+	set_ax_limits(ax, x_axis_params, y_axis_params)
+
+	ann_texts.append({'label':ann_text_std(dt_start, dt_stop, ann_text_std_add), 'ha':'center'})
+	ann_and_save(fig, ann_texts, inline, m_path, fname, tag)
+
+########################################################
+def plot_confusion_matrix(conf_matrix, label_names, m_path, fname='confusion_matrix', tag='', dt_start=None, dt_stop=None, inline=False, ann_text_std_add=None, ann_texts_in=None, normalize=False, x_axis_params=None, y_axis_params=None):
+# x_axis_params={'axis_label':None, 'min':None, 'max':None}, y_axis_params={'axis_label':None, 'min':None, 'max':None}
+	ann_texts, x_axis_params, y_axis_params = _setup_vars(ann_texts_in, x_axis_params, y_axis_params)
+
+	x_axis_params['axis_label'] = x_axis_params.get('axis_label', 'Predicted Label')
+	y_axis_params['axis_label'] = y_axis_params.get('axis_label', 'True Label')
+
+	fig, ax = plt.subplots(num=fname)
+	fig.set_size_inches(aspect_ratio_single*vsize, vsize)
+
+	z_label = 'Count'
+	fmt = 'd'
+
+	_max = conf_matrix.sum(axis=1)[0]
+	norm = mpl.colors.Normalize(vmin=0, vmax=_max)
+	thresh = _max / 2.
+	if normalize:
+		conf_matrix = 100*conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+		z_label = '%'
+		fmt = '.2f'
+		norm = mpl.colors.Normalize(vmin=0., vmax=100.)
+		thresh = 50.
+
+	cmap=std_cmap_r
+
+	# Plot matrix
+	img = ax.imshow(conf_matrix, interpolation='nearest', cmap=cmap, norm=norm)
+
+	fig.colorbar(img, ax=ax, label=z_label, cmap=cmap, norm=norm)
+
+	ticks = np.arange(len(label_names))
+	plt.xticks(ticks, label_names, rotation=45)
+	plt.yticks(ticks, label_names)
+	ax.minorticks_off()
+
+	# Format number color according to threshold
+	for i, j in itertools.product(range(conf_matrix.shape[0]), range(conf_matrix.shape[1])):
+		plt.text(j, i, format(conf_matrix[i, j], fmt), horizontalalignment='center', color='white' if conf_matrix[i, j] > thresh else 'black')
 
 	clean_ax(ax, x_axis_params, y_axis_params)
 	set_ax_limits(ax, x_axis_params, y_axis_params)

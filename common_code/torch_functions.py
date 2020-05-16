@@ -213,3 +213,24 @@ model_is_autoencoder=False,
 	# training complete, wrap it up
 	dfp_train_results = create_dfp(training_results, target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc'], sort_by=['epoch'], sort_by_ascending=[True])
 	return dfp_train_results
+
+########################################################
+def get_preds(dl, model, device):
+	all_labels = []
+	all_preds = []
+	model.eval()
+	for (inputs, labels) in dl:
+			inputs = inputs.to(device)
+			labels = labels.to(device)
+
+			outputs = model(inputs)
+
+			_, preds = torch.max(outputs, 1)
+
+			all_labels.append(labels.cpu().numpy())
+			all_preds.append(preds.cpu().numpy())
+
+	all_labels = np.concatenate(all_labels).ravel()
+	all_preds = np.concatenate(all_preds).ravel()
+
+	return all_labels, all_preds
