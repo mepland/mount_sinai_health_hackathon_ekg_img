@@ -4,8 +4,6 @@
 ########################################################
 import os
 import argparse
-import warnings
-warnings.filterwarnings('error')
 from tqdm import tqdm
 from functools import partial
 
