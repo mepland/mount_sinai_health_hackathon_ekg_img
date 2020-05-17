@@ -66,7 +66,7 @@ y_major_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_m
 y_minor_ticks_fixed = np.linspace(y_min_fixed, y_max_fixed, int((y_max_fixed-y_min_fixed)/minor_y)+1)
 
 ########################################################
-def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True, show_axes_labels=True, show_tick_labels=True, use_color=False, grid_layout=(6,2)):
+def plot_waveform(dfp, channel_names, sampling_freq, m_path='output', fname='waveform', tag='', inline=False, target_time_range=2.5, target_im_res=800, run_parallel=False, fixed_yaxis_range=False, show_y_minor_grid=True, show_axes_labels=True, show_tick_labels=True, use_color=False, grid_layout=(4,3)):
 	# setup
 
 	# target_im_res = 1200 # decent quality

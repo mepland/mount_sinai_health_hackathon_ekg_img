@@ -84,7 +84,8 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, s
 					target_time_range=slice_time_range, target_im_res=im_res,
 					run_parallel=True, # Turn off some error checking to speed things up
 					fixed_yaxis_range=True, # Use fixed y-axes range
-					show_y_minor_grid=False, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
+					show_y_minor_grid=True, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
+					show_axes_labels=False, show_tick_labels=False, # turn off axes and tick labels
 				)
 
 		except (Exception, Warning) as err:
@@ -108,7 +109,7 @@ if __name__ == '__main__':
 	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='../data/preprocessed', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}/all.')
 	parser.add_argument('-n', '--n_ekg_to_process', dest='n_ekg_to_process', type=int, default=-1, help='Number of input EKGs to process, -1 is all.')
 	parser.add_argument('-s', '--size', dest='im_res', type=int, default=800, help='Size of output image (800 produces a 800x800 image).')
-	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=5., help='Length of time to sample from an EKG (seconds).')
+	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=2.5, help='Length of time to sample from an EKG (seconds).')
 	parser.add_argument('--n_slices_max', dest='n_slices_max', type=int, default=5, help='Maximum number of slices to take from a single EKG.')
 	parser.add_argument('--sampling_freq', dest='sampling_freq', type=int, default=500, help='EKG ADC sampling frequency (Hz).')
 	parser.add_argument('-j', '--processes', dest='n_processes', type=int, default=1, help='Number of sub-processes run in parallel.')
@@ -200,7 +201,7 @@ if __name__ == '__main__':
 	# actually run
 	print(f'n_cores = {n_cores}, using n_processes = {n_processes} for n_tranches = {n_tranches}')
 
-	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, n_slices_max, sampling_freq, drop_multi, channel_names)
+	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, n_slices_max, sampling_freq, channel_names, drop_multi)
 
 	if debug:
 		# single threaded debugging
