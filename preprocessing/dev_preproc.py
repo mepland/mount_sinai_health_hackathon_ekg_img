@@ -7,7 +7,7 @@ get_ipython().system('{sys.executable} -m pip install --upgrade pip');
 get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 # ### Load packages
 
-# In[1]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -34,7 +34,7 @@ np.random.seed(rnd_seed)
 # ***
 # # Setup Variables and Functions
 
-# In[2]:
+# In[ ]:
 
 
 # input vars for this sample
@@ -47,8 +47,9 @@ n_channels = len(channel_names)
 
 # output vars
 im_res=800
+# im_res=224
 out_path = f'./output_dev/im_res_{im_res}'
-slice_time_range = 5 # seconds
+slice_time_range = 2.5 # seconds
 n_slices_max = 5 # max number of slice_time_range length slices to take from one original waveform
 
 n_samples_per_slice = int(np.ceil(sampling_freq*slice_time_range))
@@ -66,7 +67,7 @@ Dx_classes = {
 }
 
 
-# In[3]:
+# In[ ]:
 
 
 def load_data(in_path, fname, channel_names):
@@ -106,13 +107,13 @@ def load_data(in_path, fname, channel_names):
 # ***
 # # Load the data
 
-# In[4]:
+# In[ ]:
 
 
 fnames = [f.replace('.mat', '') for f in os.listdir(input_path) if os.path.isfile(os.path.join(input_path, f)) and not f.startswith('.') and f.endswith('mat')]
 
 
-# In[5]:
+# In[ ]:
 
 
 fname = fnames[0]
@@ -121,19 +122,19 @@ fname = fnames[0]
 print(fname)
 
 
-# In[6]:
+# In[ ]:
 
 
 dfp_channels, Dx = load_data(input_path, fname, channel_names)
 
 
-# In[7]:
+# In[ ]:
 
 
 Dx
 
 
-# In[8]:
+# In[ ]:
 
 
 dfp_channels
@@ -142,28 +143,29 @@ dfp_channels
 # ***
 # # Plotting
 
-# In[9]:
+# In[ ]:
 
+
+# from plotting_preprocessing import *
 
 i_slice_start = 0
 i_slice_stop = i_slice_start+n_samples_per_slice
 
 plot_waveform(dfp_channels.iloc[i_slice_start:i_slice_stop],
     channel_names, sampling_freq,
-    m_path=None,
-    fname=None,
-    tag='', inline=True,
+    m_path=out_path, fname='test_ekg', tag='_no_margin', inline=False,
     target_time_range=slice_time_range, target_im_res=im_res,
     run_parallel=False, # Turn off some error checking to speed things up
     fixed_yaxis_range=True, # Use fixed y-axes range
-    show_y_minor_grid=False, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
+    show_y_minor_grid=True, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
+    show_axes_labels=False, show_tick_labels=False, # turn off axes and tick labels
 )
 
 
 # ***
 # # Slicing
 
-# In[10]:
+# In[ ]:
 
 
 n_samples = len(dfp_channels.index)
@@ -172,7 +174,7 @@ n_slices = min(int(n_samples / n_samples_per_slice), n_slices_max)
 starts = (1. - (1. / float(n_slices)) )*np.random.random(n_slices)
 
 
-# In[11]:
+# In[ ]:
 
 
 m_path = f'{out_path}/{Dx}'
@@ -191,7 +193,8 @@ for islice in range(n_slices):
         target_time_range=slice_time_range, target_im_res=im_res,
         run_parallel=True, # Turn off some error checking to speed things up
         fixed_yaxis_range=True, # Use fixed y-axes range
-        show_y_minor_grid=False, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
+        show_y_minor_grid=True, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
+        show_axes_labels=False, show_tick_labels=False, # turn off axes and tick labels
     )
 
 
