@@ -108,7 +108,7 @@ if __name__ == '__main__':
 	parser.add_argument('-i', '--input_path', dest='input_path', type=str, default='../data/PhysioNetChallenge2020_Training_CPSC/Training_WFDB', help='Path to top level directory containing the PhysioNet data.')
 	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='../data/preprocessed', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}/all.')
 	parser.add_argument('-n', '--n_ekg_to_process', dest='n_ekg_to_process', type=int, default=-1, help='Number of input EKGs to process, -1 is all.')
-	parser.add_argument('-s', '--size', dest='im_res', type=int, default=800, help='Size of output image (800 produces a 800x800 image).')
+	parser.add_argument('-s', '--size', dest='im_res', type=int, default=600, help='Size of output image (600 produces a 600x600 image).')
 	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=2.5, help='Length of time to sample from an EKG (seconds).')
 	parser.add_argument('--n_slices_max', dest='n_slices_max', type=int, default=5, help='Maximum number of slices to take from a single EKG.')
 	parser.add_argument('--sampling_freq', dest='sampling_freq', type=int, default=500, help='EKG ADC sampling frequency (Hz).')

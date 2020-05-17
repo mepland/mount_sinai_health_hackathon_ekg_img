@@ -4,6 +4,7 @@ ipywidgets
 pandas
 numpy
 scipy
+natsort
 
 matplotlib
 # seaborn
@@ -17,6 +18,8 @@ humanize
 
 torch
 torchvision
+
+timm # pretrained models from https://github.com/rwightman/pytorch-image-models
 
 # xgboost
 scikit-learn

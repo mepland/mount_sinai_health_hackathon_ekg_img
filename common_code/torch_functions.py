@@ -64,6 +64,15 @@ def save_model(model, epoch, model_name, models_path):
 	torch.save(model.state_dict(), os.path.join(models_path, f'{model_name}_{epoch}.model'))
 
 ########################################################
+def clean_save_models(model_name, models_path, n_models_to_keep):
+	if n_models_to_keep <= 0:
+		raise ValueError('Can not run clean_save_models with n_models_to_keep = {n_models_to_keep}!')
+	fnames = [f for f in os.listdir(models_path) if os.path.isfile(os.path.join(models_path, f)) and f.startswith(f'{model_name}_') and f.endswith('.model')]
+	fnames = natsorted(fnames)[:-n_models_to_keep]
+	for fname in fnames:
+		os.remove(os.path.join(models_path, fname))
+
+########################################################
 def load_model(model, device, epoch, model_name, models_path):
 	# model is the base class of the model you want to load, will have loaded model in the end
 	model.to(device)
@@ -108,6 +117,8 @@ max_epochs, do_es=True, es_min_val_per_improvement=0.005, es_epochs=10,
 do_decay_lr=True, initial_lr=0.001, lr_epoch_period=30, lr_n_period_cap=6,
 print_CUDA_MEM=False,
 model_is_autoencoder=False,
+save_model_inhibit=10, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
+n_models_on_disk=5, # keep the last n_models_on_disk = 5 models on disk, set to -1 to keep all
 ):
 	float_fmt='.9f'
 
@@ -171,9 +182,13 @@ model_is_autoencoder=False,
 		# Save the model if the val loss is less than our current best
 		saved_model = False
 		if epoch == 0 or val_loss < best_val_loss:
-			save_model(model, epoch, model_name, models_path)
 			best_val_loss = val_loss
-			saved_model = True
+			if save_model_inhibit < epoch:
+				save_model(model, epoch, model_name, models_path)
+				saved_model = True
+
+				if n_models_on_disk > 0:
+					clean_save_models(model_name, models_path, n_models_to_keep=n_models_on_disk)
 
 		# Finish epoch_message
 		cuda_mem_alloc = None
@@ -207,12 +222,12 @@ model_is_autoencoder=False,
 				# epoch_pbar.write(f"per_changes: {', '.join([f'{per:8.3%}' for per in per_changes])}")
 				break
 
-		# end of epoch loop, update pbar
+		# end of epoch loop, update pbar and save progress to csv
 		epoch_pbar.update(1)
 
-	# training complete, wrap it up
-	dfp_train_results = create_dfp(training_results, target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc'], sort_by=['epoch'], sort_by_ascending=[True])
-	return dfp_train_results
+		dfp_train_results = create_dfp(training_results, target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc'], sort_by=['epoch'], sort_by_ascending=True)
+
+		write_dfp(dfp_train_results, models_path, 'train_results', tag='')
 
 ########################################################
 def get_preds(dl, model, device):

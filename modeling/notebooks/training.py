@@ -3,6 +3,7 @@
 
 # # Model Training
 # For reference see [Finetuning Torchvision Models](https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html)  
+# For additional pretrained models see [rwightman/pytorch-image-models](https://github.com/rwightman/pytorch-image-models), in particular the [README model list](https://github.com/rwightman/pytorch-image-models#ported-weights), [EfficientNet generator](https://github.com/rwightman/gen-efficientnet-pytorch/blob/master/geffnet/gen_efficientnet.py), and [pretrained weights](https://github.com/rwightman/pytorch-image-models/releases/tag/v0.1-weights)  
 import sys
 get_ipython().system('{sys.executable} -m pip install --upgrade pip');
 get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
@@ -21,6 +22,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 from sklearn.metrics import confusion_matrix
 
+import timm # pretrained models from rwightman/pytorch-image-models
 import torchvision.models as models
 from torchvision import datasets, transforms
 # from sklearn.metrics import confusion_matrix
@@ -53,14 +55,15 @@ print(f'device = {device}')
 # In[4]:
 
 
-# Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
-model_name = 'resnet'
+# Models to choose from ['tf_efficientnet_b7_ns', resnet, alexnet, vgg, squeezenet, densenet] # inception
+# model_name = 'resnet'
+model_name = 'tf_efficientnet_b7_ns'
 
 # Number of classes in the dataset
 n_classes = len(Dx_classes.keys())
 
-# Batch size for training (change depending on how much memory you have)
-batch_size = 256
+# Batch size for training (change depending on how much memory you have, and how large the model is)
+batch_size = 40 # TODO 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 64 didn't work. These images are only a few kb so I'm not sure what's driving that scaling...
 
 # Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch.
 # Should probably remain True.
@@ -73,7 +76,9 @@ use_pretrained=True
 data_path = os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/data')
 
 # resolution of preprocessed images
-im_res = 800
+# im_res = 800
+im_res = 600
+# im_res=224
 
 
 # In[5]:
@@ -111,7 +116,17 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
     model_ft = None
     input_size = 0
 
-    if model_name == 'resnet':
+    if model_name == 'tf_efficientnet_b7_ns':
+        ''' EfficientNet-B7 NoisyStudent. Tensorflow compatible variant
+            Paper: Self-training with Noisy Student improves ImageNet classification (https://arxiv.org/abs/1911.04252)
+        '''
+        model_ft = timm.create_model('tf_efficientnet_b7_ns', pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.classifier.in_features
+        model_ft.classifier = nn.Linear(num_ftrs, n_classes)
+        input_size = model_ft.default_cfg['input_size'][1]
+
+    elif model_name == 'resnet':
         ''' Resnet101
         '''
         model_ft = models.resnet101(pretrained=use_pretrained)
@@ -192,19 +207,24 @@ print(f'input_size = {input_size}')
 # In[11]:
 
 
-loss_fn = nn.CrossEntropyLoss()
-
-model.to(device);
+if im_res < input_size:
+    raise ValueError(f'Warning, trying to run a model with an input size of {input_size}x{input_size} on images that are only {im_res}x{im_res}! You can procede at your own risk, ie upscaling, better to fix one or the other size though!')
 
 
 # In[12]:
 
 
-# TODO is all of this needed?
+loss_fn = nn.CrossEntropyLoss()
+
+model.to(device);
+
+
+# In[13]:
+
 
 # Gather the parameters to be optimized/updated in this run.
 # If we are finetuning we will be updating all parameters
-# However, if we are usingthe  feature extract method, we will only update the parameters that we have just initialized,
+# However, if we are using the feature extract method, we will only update the parameters that we have just initialized,
 # i.e. the parameters with requires_grad is True.
 
 params_to_update = model.parameters()
@@ -221,9 +241,10 @@ else:
             print(name)
 
 
-# In[13]:
+# In[14]:
 
 
+# Setup optimizer
 optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 # optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
 
@@ -233,39 +254,54 @@ optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 
 # ### Compute Normalization Factors
 dl_unnormalized = torch.utils.data.DataLoader(
-    tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/all',
-                            transform=transforms.Compose([transforms.Resize(input_size), transforms.ToTensor()])),
+    tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/train',
+                            transform=transforms.Compose([transforms.Grayscale(num_output_channels=3), transforms.Resize(input_size), transforms.ToTensor()])),
     batch_size=batch_size, shuffle=False, num_workers=8
 )
 
 pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
 
-print(f'pop_mean = {pop_mean}')
-print(f'pop_std0 = {pop_std0}')
-# In[14]:
+print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
+print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
+# In[15]:
 
 
 # use normalization results computed earlier
 if input_size == 224:
-    pop_mean = np.array([0.94411284, 0.94346404, 0.94239646])
-    pop_std0 = np.array([0.04548508, 0.04374889, 0.04681061])
+    pop_mean = np.array([])
+    pop_std0 = np.array([])
+elif input_size == 600:
+    pop_mean = np.array([0.95724732, 0.95724732, 0.95724732])
+    pop_std0 = np.array([0.08290727, 0.08290727, 0.08290727])
+elif input_size == 800:
+    pop_mean = np.array([])
+    pop_std0 = np.array([])
 else:
     raise ValueError(f'No precomputed mean, std avalaible for input_size = {input_size}')
+
+# use normalization results used when training the model, only works for timm models. Should probably only use for color images
+pop_mean = np.array(model.default_cfg['mean'])
+pop_std0 = np.array(model.default_cfg['std'])
+# In[16]:
+
+
+print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
+print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
 
 
 # ### Actually Load Data
 
-# In[15]:
+# In[17]:
 
 
-transform = transforms.Compose([transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(pop_mean, pop_std0)])
+# need to fake 3 channels r = b = g with Grayscale to use pretrained networks
+transform = transforms.Compose([transforms.Grayscale(num_output_channels=3), transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(pop_mean, pop_std0)])
 
 ds_train = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/train', transform=transform)
 ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
-ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
 
 
-# In[16]:
+# In[18]:
 
 
 class_to_idx = {}
@@ -275,15 +311,21 @@ class_to_idx = OrderedDict(sorted(class_to_idx.items(), key=lambda x: x))
 idx_to_class = OrderedDict([[v,k] for k,v in class_to_idx.items()])
 
 
-# In[17]:
+# In[19]:
 
 
-dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=False, num_workers=8)
-dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=False, num_workers=8)
-dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, num_workers=8)
+dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=True, num_workers=8)
+dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, num_workers=8)
 
 
-# In[18]:
+# In[20]:
+
+
+# ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
+# dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=True, num_workers=8)
+
+
+# In[21]:
 
 
 # test_mem()
@@ -292,7 +334,7 @@ dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=Fa
 # ***
 # # Train
 
-# In[ ]:
+# In[22]:
 
 
 # test_mem()
@@ -307,34 +349,28 @@ model_name=model_name, models_path=models_path,
 max_epochs=200,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=6,
+save_model_inhibit=10, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
+n_models_on_disk=5, # keep the last n_models_on_disk = 5 models on disk, set to -1 to keep all
 )
-
-
-# In[ ]:
-
-
-write_dfp(dfp_train_results, output_path , 'train_results', tag='',
-target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc'],
-sort_by=['epoch'], sort_by_ascending=True)
 
 
 # ***
 # # Eval
 
-# In[19]:
+# In[ ]:
 
 
-dfp_train_results = load_dfp(output_path, 'train_results', tag='', cols_bool=['saved_model'],
+dfp_train_results = load_dfp(models_path, 'train_results', tag='', cols_bool=['saved_model'],
                              cols_float=['train_loss','val_loss','best_val_loss','delta_per_best','elapsed_time','epoch_time'])
 
 
-# In[20]:
+# In[ ]:
 
 
 dfp_train_results
 
 
-# In[21]:
+# In[ ]:
 
 
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
@@ -346,7 +382,7 @@ plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag=''
 
 # ### Load model from disk
 
-# In[22]:
+# In[ ]:
 
 
 best_epoch = dfp_train_results.iloc[dfp_train_results['val_loss'].idxmin()]['epoch']
@@ -355,19 +391,19 @@ load_model(model, device, best_epoch, model_name, models_path)
 
 # ### Make Predictions
 
-# In[23]:
+# In[ ]:
 
 
-labels, preds = get_preds(dl_test, model, device)
+labels, preds = get_preds(dl_val, model, device)
 
 
-# In[24]:
+# In[ ]:
 
 
 # labels
 
 
-# In[25]:
+# In[ ]:
 
 
 # preds
@@ -375,25 +411,56 @@ labels, preds = get_preds(dl_test, model, device)
 
 # ### Confusion Matrix
 
-# In[26]:
+# In[ ]:
 
 
-conf_matrix = confusion_matrix(labels, preds)
+conf_matrix = confusion_matrix(y_true=labels, y_pred=preds, labels=[class_to_idx[k] for k in Dx_classes.keys()])
 
 
-# In[27]:
+# In[ ]:
 
 
-# conf_matrix
+conf_matrix
 
 
-# In[28]:
+# In[ ]:
 
 
 # from common_code import *
 
-plot_confusion_matrix(conf_matrix, label_names=idx_to_class.values(),
-                      m_path=output_path, tag='', inline=True,
+plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
+                      m_path=output_path, tag='_val', inline=True,
+                      ann_text_std_add=None,
+                      normalize=True,
+                     )
+
+
+# ***
+# # TODO: Verify the confusion matrix above is correctly labeled
+
+# In[ ]:
+
+
+conf_matrix2 = confusion_matrix(y_true=labels, y_pred=preds)
+
+
+# In[ ]:
+
+
+conf_matrix2
+
+
+# In[ ]:
+
+
+idx_to_class
+
+
+# In[ ]:
+
+
+plot_confusion_matrix(conf_matrix2,
+                      m_path=None, tag=None, inline=True,
                       ann_text_std_add=None,
                       normalize=True,
                      )

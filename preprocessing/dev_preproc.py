@@ -46,8 +46,10 @@ channel_names = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 
 n_channels = len(channel_names)
 
 # output vars
-im_res=800
+# im_res=600
+im_res=600
 # im_res=224
+
 out_path = f'./output_dev/im_res_{im_res}'
 slice_time_range = 2.5 # seconds
 n_slices_max = 5 # max number of slice_time_range length slices to take from one original waveform
@@ -148,12 +150,16 @@ dfp_channels
 
 # from plotting_preprocessing import *
 
+# im_res=800
+# im_res=600
+# im_res=224
+
 i_slice_start = 0
 i_slice_stop = i_slice_start+n_samples_per_slice
 
 plot_waveform(dfp_channels.iloc[i_slice_start:i_slice_stop],
     channel_names, sampling_freq,
-    m_path=out_path, fname='test_ekg', tag='_no_margin', inline=False,
+    m_path=out_path, fname='test_ekg', tag='', inline=False,
     target_time_range=slice_time_range, target_im_res=im_res,
     run_parallel=False, # Turn off some error checking to speed things up
     fixed_yaxis_range=True, # Use fixed y-axes range
