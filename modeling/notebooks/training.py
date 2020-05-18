@@ -245,8 +245,8 @@ else:
 
 
 # Setup optimizer
-optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-# optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
+# optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
 
 
 # ***
@@ -314,8 +314,8 @@ idx_to_class = OrderedDict([[v,k] for k,v in class_to_idx.items()])
 # In[19]:
 
 
-dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=True, num_workers=8)
-dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, num_workers=8)
+dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
+dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
 
 
 # In[20]:
@@ -346,11 +346,11 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=200,
+max_epochs=200, max_time_min=500,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
-do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=6,
-save_model_inhibit=10, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
-n_models_on_disk=5, # keep the last n_models_on_disk = 5 models on disk, set to -1 to keep all
+do_decay_lr=True, initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
+save_model_inhibit=20, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
+n_models_on_disk=3, # keep the last n_models_on_disk models on disk, set to -1 to keep all
 )
 
 
@@ -369,17 +369,19 @@ dfp_train_results = load_dfp(models_path, 'train_results', tag='', cols_bool=['s
 
 dfp_train_results
 
-
-# In[ ]:
-
-
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
+                   ann_text_std_add=None,
+                   y_axis_params={'log': False},
+                   loss_cols=['val_loss'],
+                  )plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
+                   ann_text_std_add=None,
+                   y_axis_params={'log': False},
+                   loss_cols=['train_loss'],
+                  )plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
                    ann_text_std_add=None,
                    y_axis_params={'log': False},
                    loss_cols=['train_loss', 'val_loss'],
                   )
-
-
 # ### Load model from disk
 
 # In[ ]:
@@ -420,49 +422,20 @@ conf_matrix = confusion_matrix(y_true=labels, y_pred=preds, labels=[class_to_idx
 # In[ ]:
 
 
-conf_matrix
-
-
-# In[ ]:
-
-
-# from common_code import *
-
 plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
-                      m_path=output_path, tag='_val', inline=True,
+                      m_path=output_path, tag='_val', inline=False,
                       ann_text_std_add=None,
                       normalize=True,
                      )
 
 
-# ***
-# # TODO: Verify the confusion matrix above is correctly labeled
-
 # In[ ]:
 
 
-conf_matrix2 = confusion_matrix(y_true=labels, y_pred=preds)
-
-
-# In[ ]:
-
-
-conf_matrix2
-
-
-# In[ ]:
-
-
-idx_to_class
-
-
-# In[ ]:
-
-
-plot_confusion_matrix(conf_matrix2,
-                      m_path=None, tag=None, inline=True,
+plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
+                      m_path=output_path, tag='_raw_val', inline=False,
                       ann_text_std_add=None,
-                      normalize=True,
+                      normalize=False,
                      )
 
 
