@@ -20,12 +20,19 @@ sys.path.append(os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/'))
 from common_code import *
 get_ipython().run_line_magic('matplotlib', 'inline')
 
+import timm # pretrained models from rwightman/pytorch-image-models
+import torchvision.models as models # pretrained models from pytorch
+
+from torchvision import datasets, transforms
 from sklearn.metrics import confusion_matrix
 
-import timm # pretrained models from rwightman/pytorch-image-models
-import torchvision.models as models
-from torchvision import datasets, transforms
-# from sklearn.metrics import confusion_matrix
+
+# In[ ]:
+
+
+# Check if gpu support is available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'device = {device}')
 
 
 # In[ ]:
@@ -47,17 +54,9 @@ Dx_classes = {
 # In[ ]:
 
 
-# Check if gpu support is available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f'device = {device}')
-
-
-# In[ ]:
-
-
 # Models to choose from ['tf_efficientnet_b7_ns', resnet, alexnet, vgg, squeezenet, densenet] # inception
-# model_name = 'resnet'
 model_name = 'tf_efficientnet_b7_ns'
+# model_name = 'resnet'
 
 # Number of classes in the dataset
 n_classes = len(Dx_classes.keys())
@@ -65,8 +64,7 @@ n_classes = len(Dx_classes.keys())
 # Batch size for training (change depending on how much memory you have, and how large the model is)
 batch_size = 40 # TODO 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 64 didn't work. These images are only a few kb so I'm not sure what's driving that scaling...
 
-# Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch.
-# Should probably remain True.
+# Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.
 feature_extract = True
 
 # use pretrained model, should probably remain True.
@@ -92,6 +90,23 @@ models_path = f'../models/{model_name}'
 
 
 # test_mem()
+
+
+# ***
+# ### Make Training Deterministic
+# See [Pytorch's Docs on Reproducibility](https://pytorch.org/docs/stable/notes/randomness.html)  
+
+# In[ ]:
+
+
+rnd_seed=42
+np.random.seed(rnd_seed)
+torch.manual_seed(rnd_seed+1)
+if str(device) == 'cuda':
+    torch.cuda.manual_seed(rnd_seed+2)
+if torch.backends.cudnn.enabled:
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 # ***
@@ -196,6 +211,7 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
 
 
 model, input_size = initialize_model(model_name, n_classes, feature_extract, use_pretrained)
+model.to(device);
 
 
 # In[ ]:
@@ -208,15 +224,16 @@ print(f'input_size = {input_size}')
 
 
 if im_res < input_size:
-    raise ValueError(f'Warning, trying to run a model with an input size of {input_size}x{input_size} on images that are only {im_res}x{im_res}! You can procede at your own risk, ie upscaling, better to fix one or the other size though!')
+    raise ValueError(f'Warning, trying to run a model with an input size of {input_size}x{input_size} on images that are only {im_res}x{im_res}! You can proceed at your own risk, ie upscaling, better to fix one or the other size though!')
 
 
 # In[ ]:
 
 
-loss_fn = nn.CrossEntropyLoss()
-
-model.to(device);
+# https://pytorch.org/docs/stable/nn.html#crossentropyloss
+loss_fn = nn.CrossEntropyLoss(weight=None, reduction='mean')
+# TODo if we move to unbalanced classes / full dataset, add weights to correct
+# reduction='mean', return mean CrossEntropyLoss over batches
 
 
 # In[ ]:
@@ -277,7 +294,7 @@ elif input_size == 800:
     pop_mean = np.array([])
     pop_std0 = np.array([])
 else:
-    raise ValueError(f'No precomputed mean, std avalaible for input_size = {input_size}')
+    raise ValueError(f'No precomputed mean, std available for input_size = {input_size}')
 
 # use normalization results used when training the model, only works for timm models. Should probably only use for color images
 pop_mean = np.array(model.default_cfg['mean'])
@@ -314,15 +331,15 @@ idx_to_class = OrderedDict([[v,k] for k,v in class_to_idx.items()])
 # In[ ]:
 
 
-dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
-dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
+dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
+dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
 
 
 # In[ ]:
 
 
 # ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
-# dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=True, num_workers=8)
+# dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
 
 
 # In[ ]:
@@ -346,10 +363,10 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=Fals
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=200, max_time_min=420,
+max_epochs=300, max_time_min=900,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
-save_model_inhibit=10, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
+# save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
 n_models_on_disk=3, # keep the last n_models_on_disk models on disk, set to -1 to keep all
 )
 
@@ -434,21 +451,13 @@ conf_matrix = confusion_matrix(y_true=labels, y_pred=preds, labels=[class_to_idx
 # In[ ]:
 
 
-plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
-                      m_path=output_path, tag='_val', inline=False,
-                      ann_text_std_add=None,
-                      normalize=True,
-                     )
-
-
-# In[ ]:
-
-
-plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
-                      m_path=output_path, tag='_raw_val', inline=False,
-                      ann_text_std_add=None,
-                      normalize=False,
-                     )
+cms = {'_val': True, '_raw_val': False}
+for tag,norm in cms.items():
+    plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
+                          m_path=output_path, tag=tag, inline=False,
+                          ann_text_std_add=None,
+                          normalize=norm,
+                         )
 
 
 # ***

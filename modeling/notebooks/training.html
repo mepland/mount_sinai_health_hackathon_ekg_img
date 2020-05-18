@@ -13105,12 +13105,26 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="kn">from</span> <span class="nn">common_code</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="o">%</span><span class="k">matplotlib</span> inline
 
-<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
-
 <span class="kn">import</span> <span class="nn">timm</span> <span class="c1"># pretrained models from rwightman/pytorch-image-models</span>
-<span class="kn">import</span> <span class="nn">torchvision.models</span> <span class="k">as</span> <span class="nn">models</span>
+<span class="kn">import</span> <span class="nn">torchvision.models</span> <span class="k">as</span> <span class="nn">models</span> <span class="c1"># pretrained models from pytorch</span>
+
 <span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
-<span class="c1"># from sklearn.metrics import confusion_matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Check if gpu support is available</span>
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;device = </span><span class="si">{device}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13146,24 +13160,9 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Check if gpu support is available</span>
-<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;device = </span><span class="si">{device}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Models to choose from [&#39;tf_efficientnet_b7_ns&#39;, resnet, alexnet, vgg, squeezenet, densenet] # inception</span>
-<span class="c1"># model_name = &#39;resnet&#39;</span>
 <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;tf_efficientnet_b7_ns&#39;</span>
+<span class="c1"># model_name = &#39;resnet&#39;</span>
 
 <span class="c1"># Number of classes in the dataset</span>
 <span class="n">n_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -13171,8 +13170,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="c1"># Batch size for training (change depending on how much memory you have, and how large the model is)</span>
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">40</span> <span class="c1"># TODO 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 64 didn&#39;t work. These images are only a few kb so I&#39;m not sure what&#39;s driving that scaling...</span>
 
-<span class="c1"># Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch.</span>
-<span class="c1"># Should probably remain True.</span>
+<span class="c1"># Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.</span>
 <span class="n">feature_extract</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="c1"># use pretrained model, should probably remain True.</span>
@@ -13212,6 +13210,35 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<h3 id="Make-Training-Deterministic">Make Training Deterministic<a class="anchor-link" href="#Make-Training-Deterministic">&#182;</a></h3><p>See <a href="https://pytorch.org/docs/stable/notes/randomness.html">Pytorch's Docs on Reproducibility</a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rnd_seed</span><span class="o">=</span><span class="mi">42</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="p">)</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">deterministic</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">benchmark</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 
     </div>
@@ -13347,6 +13374,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="p">,</span> <span class="n">input_size</span> <span class="o">=</span> <span class="n">initialize_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">,</span> <span class="n">use_pretrained</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
 </pre></div>
 
     </div>
@@ -13373,7 +13401,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">im_res</span> <span class="o">&lt;</span> <span class="n">input_size</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Warning, trying to run a model with an input size of </span><span class="si">{input_size}</span><span class="s1">x</span><span class="si">{input_size}</span><span class="s1"> on images that are only </span><span class="si">{im_res}</span><span class="s1">x</span><span class="si">{im_res}</span><span class="s1">! You can procede at your own risk, ie upscaling, better to fix one or the other size though!&#39;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Warning, trying to run a model with an input size of </span><span class="si">{input_size}</span><span class="s1">x</span><span class="si">{input_size}</span><span class="s1"> on images that are only </span><span class="si">{im_res}</span><span class="s1">x</span><span class="si">{im_res}</span><span class="s1">! You can proceed at your own risk, ie upscaling, better to fix one or the other size though!&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13386,9 +13414,10 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
-
-<span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># https://pytorch.org/docs/stable/nn.html#crossentropyloss</span>
+<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+<span class="c1"># TODo if we move to unbalanced classes / full dataset, add weights to correct</span>
+<span class="c1"># reduction=&#39;mean&#39;, return mean CrossEntropyLoss over batches</span>
 </pre></div>
 
     </div>
@@ -13480,7 +13509,7 @@ print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
     <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
     <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No precomputed mean, std avalaible for input_size = </span><span class="si">{input_size}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No precomputed mean, std available for input_size = </span><span class="si">{input_size}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13550,8 +13579,8 @@ pop_std0 = np.array(model.default_cfg['std'])
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dl_train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-<span class="n">dl_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dl_train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">dl_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13565,7 +13594,7 @@ pop_std0 = np.array(model.default_cfg['std'])
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># ds_test = tv.datasets.ImageFolder(root=f&#39;{data_path}/preprocessed/im_res_{im_res}/test&#39;, transform=transform)</span>
-<span class="c1"># dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=True, num_workers=8)</span>
+<span class="c1"># dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)</span>
 </pre></div>
 
     </div>
@@ -13615,10 +13644,10 @@ pop_std0 = np.array(model.default_cfg['std'])
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">dl_train</span><span class="p">,</span> <span class="n">dl_val</span><span class="p">,</span>
 <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
 <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="o">=</span><span class="n">models_path</span><span class="p">,</span>
-<span class="n">max_epochs</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">420</span><span class="p">,</span>
+<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
 <span class="n">do_es</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">es_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <span class="n">do_decay_lr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,</span>
-<span class="n">save_model_inhibit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="c1"># don&#39;t save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately</span>
+<span class="c1"># save_model_inhibit=10, # don&#39;t save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately</span>
 <span class="n">n_models_on_disk</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="c1"># keep the last n_models_on_disk models on disk, set to -1 to keep all</span>
 <span class="p">)</span>
 </pre></div>
@@ -13793,28 +13822,13 @@ pop_std0 = np.array(model.default_cfg['std'])
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
-                      <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;_val&#39;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                      <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                     <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
-                      <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;_raw_val&#39;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                      <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                     <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cms</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_val&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;_raw_val&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="k">for</span> <span class="n">tag</span><span class="p">,</span><span class="n">norm</span> <span class="ow">in</span> <span class="n">cms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                          <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                          <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+                         <span class="p">)</span>
 </pre></div>
 
     </div>

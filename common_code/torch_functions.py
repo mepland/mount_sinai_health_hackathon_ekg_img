@@ -118,8 +118,8 @@ do_es=True, es_min_val_per_improvement=0.005, es_epochs=10,
 do_decay_lr=True, initial_lr=0.001, lr_epoch_period=30, lr_n_period_cap=6,
 print_CUDA_MEM=False,
 model_is_autoencoder=False,
-save_model_inhibit=10, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
-n_models_on_disk=5, # keep the last n_models_on_disk = 5 models on disk, set to -1 to keep all
+save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
+n_models_on_disk=5, # keep the last n_models_on_disk models on disk, set to -1 to keep all
 ):
 	float_fmt='.9f'
 
