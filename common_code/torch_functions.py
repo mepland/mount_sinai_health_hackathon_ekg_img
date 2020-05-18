@@ -113,7 +113,8 @@ def get_loss(dl, model, loss_fn, device, model_is_autoencoder=False):
 def train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name, models_path,
-max_epochs, do_es=True, es_min_val_per_improvement=0.005, es_epochs=10,
+max_epochs, max_time_min=None,
+do_es=True, es_min_val_per_improvement=0.005, es_epochs=10,
 do_decay_lr=True, initial_lr=0.001, lr_epoch_period=30, lr_n_period_cap=6,
 print_CUDA_MEM=False,
 model_is_autoencoder=False,
@@ -228,6 +229,12 @@ n_models_on_disk=5, # keep the last n_models_on_disk = 5 models on disk, set to 
 		dfp_train_results = create_dfp(training_results, target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc'], sort_by=['epoch'], sort_by_ascending=True)
 
 		write_dfp(dfp_train_results, models_path, 'train_results', tag='')
+
+		if max_time_min is not None and max_time_min > 0:
+			if max_time_min <= elapsed_time:
+				epoch_pbar.write(f'\nReached max training time of {max_time_min} minutes, stopping!')
+				break
+
 
 ########################################################
 def get_preds(dl, model, device):
