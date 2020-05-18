@@ -10,7 +10,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 # ***
 # # Setup
 
-# In[1]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -28,7 +28,7 @@ from torchvision import datasets, transforms
 # from sklearn.metrics import confusion_matrix
 
 
-# In[2]:
+# In[ ]:
 
 
 Dx_classes = {
@@ -44,7 +44,7 @@ Dx_classes = {
 }
 
 
-# In[3]:
+# In[ ]:
 
 
 # Check if gpu support is available
@@ -52,7 +52,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'device = {device}')
 
 
-# In[4]:
+# In[ ]:
 
 
 # Models to choose from ['tf_efficientnet_b7_ns', resnet, alexnet, vgg, squeezenet, densenet] # inception
@@ -81,14 +81,14 @@ im_res = 600
 # im_res=224
 
 
-# In[5]:
+# In[ ]:
 
 
 output_path = f'../output/{model_name}'
 models_path = f'../models/{model_name}'
 
 
-# In[6]:
+# In[ ]:
 
 
 # test_mem()
@@ -97,7 +97,7 @@ models_path = f'../models/{model_name}'
 # ***
 # ### Helper Functions
 
-# In[7]:
+# In[ ]:
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -109,7 +109,7 @@ def set_parameter_requires_grad(model, feature_extracting):
 # ***
 # # Create the Model
 
-# In[8]:
+# In[ ]:
 
 
 def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True):
@@ -192,26 +192,26 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
     return model_ft, input_size
 
 
-# In[9]:
+# In[ ]:
 
 
 model, input_size = initialize_model(model_name, n_classes, feature_extract, use_pretrained)
 
 
-# In[10]:
+# In[ ]:
 
 
 print(f'input_size = {input_size}')
 
 
-# In[11]:
+# In[ ]:
 
 
 if im_res < input_size:
     raise ValueError(f'Warning, trying to run a model with an input size of {input_size}x{input_size} on images that are only {im_res}x{im_res}! You can procede at your own risk, ie upscaling, better to fix one or the other size though!')
 
 
-# In[12]:
+# In[ ]:
 
 
 loss_fn = nn.CrossEntropyLoss()
@@ -219,7 +219,7 @@ loss_fn = nn.CrossEntropyLoss()
 model.to(device);
 
 
-# In[13]:
+# In[ ]:
 
 
 # Gather the parameters to be optimized/updated in this run.
@@ -241,12 +241,12 @@ else:
             print(name)
 
 
-# In[14]:
+# In[ ]:
 
 
 # Setup optimizer
-# optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
+optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+# optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
 
 
 # ***
@@ -263,7 +263,7 @@ pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
 
 print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
 print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
-# In[15]:
+# In[ ]:
 
 
 # use normalization results computed earlier
@@ -282,7 +282,7 @@ else:
 # use normalization results used when training the model, only works for timm models. Should probably only use for color images
 pop_mean = np.array(model.default_cfg['mean'])
 pop_std0 = np.array(model.default_cfg['std'])
-# In[16]:
+# In[ ]:
 
 
 print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
@@ -291,7 +291,7 @@ print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
 
 # ### Actually Load Data
 
-# In[17]:
+# In[ ]:
 
 
 # need to fake 3 channels r = b = g with Grayscale to use pretrained networks
@@ -301,7 +301,7 @@ ds_train = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_re
 ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
 
 
-# In[18]:
+# In[ ]:
 
 
 class_to_idx = {}
@@ -311,21 +311,21 @@ class_to_idx = OrderedDict(sorted(class_to_idx.items(), key=lambda x: x))
 idx_to_class = OrderedDict([[v,k] for k,v in class_to_idx.items()])
 
 
-# In[19]:
+# In[ ]:
 
 
 dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
 dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
 
 
-# In[20]:
+# In[ ]:
 
 
 # ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
 # dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=True, num_workers=8)
 
 
-# In[21]:
+# In[ ]:
 
 
 # test_mem()
@@ -334,7 +334,7 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=Fals
 # ***
 # # Train
 
-# In[22]:
+# In[ ]:
 
 
 # test_mem()
@@ -346,10 +346,10 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=Fals
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=200, max_time_min=500,
+max_epochs=200, max_time_min=420,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
-do_decay_lr=True, initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
-save_model_inhibit=20, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
+do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
+save_model_inhibit=10, # don't save anything out for the first save_model_inhibit = 10 epochs, set to -1 to start saving immediately
 n_models_on_disk=3, # keep the last n_models_on_disk models on disk, set to -1 to keep all
 )
 
@@ -369,15 +369,27 @@ dfp_train_results = load_dfp(models_path, 'train_results', tag='', cols_bool=['s
 
 dfp_train_results
 
-plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
+
+# In[ ]:
+
+
+plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=False,
                    ann_text_std_add=None,
                    y_axis_params={'log': False},
                    loss_cols=['val_loss'],
-                  )plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
+                  )
+
+
+# In[ ]:
+
+
+plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=False,
                    ann_text_std_add=None,
                    y_axis_params={'log': False},
                    loss_cols=['train_loss'],
-                  )plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
+                  )
+
+plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
                    ann_text_std_add=None,
                    y_axis_params={'log': False},
                    loss_cols=['train_loss', 'val_loss'],
