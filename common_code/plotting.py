@@ -11,7 +11,7 @@ import itertools
 ########################################################
 # plotting
 import matplotlib as mpl
-mpl.use('Agg', warn=False)
+mpl.use('Agg')
 mpl.rcParams['font.family'] = ['HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', 'Helvetica', 'Arial', 'Lucida Grande', 'sans-serif']
 mpl.rcParams['axes.labelsize'] = 16
 mpl.rcParams['xtick.top']           = True

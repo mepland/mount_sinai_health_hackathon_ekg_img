@@ -53,7 +53,7 @@ pip install -r requirements.txt
 ```
 
 ## Running the Preprocessing Script
-Pick j based on the CPU cores you have avaliable, see `--help` for details.
+Pick j based on the CPU cores you have available, see `--help` for details.
 ```bash
 python -u preprocessing.py -j 22
 ```

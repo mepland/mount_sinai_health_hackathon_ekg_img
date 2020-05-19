@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>training</title>
+<title>graph_model</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13077,14 +13077,12 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Model-Training">Model Training<a class="anchor-link" href="#Model-Training">&#182;</a></h1><p>For reference see <a href="https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html">Finetuning Torchvision Models</a><br>
-For additional pretrained models see <a href="https://github.com/rwightman/pytorch-image-models">rwightman/pytorch-image-models</a>, in particular the <a href="https://github.com/rwightman/pytorch-image-models#ported-weights">README model list</a>, <a href="https://github.com/rwightman/gen-efficientnet-pytorch/blob/master/geffnet/gen_efficientnet.py">EfficientNet generator</a>, and <a href="https://github.com/rwightman/pytorch-image-models/releases/tag/v0.1-weights">pretrained weights</a></p>
+<h1 id="Model-Graphing">Model Graphing<a class="anchor-link" href="#Model-Graphing">&#182;</a></h1><p>Graph CNN's layout using <a href="https://github.com/waleedka/hiddenlayer">waleedka/hiddenlayer</a></p>
+<p>To use <code>hiddenlayer</code>, you must first install <a href="https://graphviz.gitlab.io/download/">Graphviz</a>, and then the <a href="https://github.com/xflr6/graphviz">graphviz</a> python wrapper package. If you have conda available it's easiest to install both together with <code>conda install graphviz python-graphviz</code>. Also, unless you compile from source, <code>hiddenlayer</code> will only work with recent versions of pytorch (&gt;1.3) and <a href="https://github.com/waleedka/hiddenlayer/issues/49">does not work for efficientnet models</a> due to a limitation with <code>torch.onnx</code></p>
 
 </div>
 </div>
-</div>import sys
-get_ipython().system('{sys.executable} -m pip install --upgrade pip');
-get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13095,7 +13093,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
@@ -13108,8 +13106,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="kn">import</span> <span class="nn">timm</span> <span class="c1"># pretrained models from rwightman/pytorch-image-models</span>
 <span class="kn">import</span> <span class="nn">torchvision.models</span> <span class="k">as</span> <span class="nn">models</span> <span class="c1"># pretrained models from pytorch</span>
 
-<span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
-<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+<span class="kn">import</span> <span class="nn">hiddenlayer</span> <span class="k">as</span> <span class="nn">hl</span> <span class="c1"># for graphing the model</span>
 </pre></div>
 
     </div>
@@ -13119,91 +13116,18 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Check if gpu support is available</span>
-<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;device = </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>device = cuda
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">Dx_classes</span> <span class="o">=</span> <span class="p">{</span>
-<span class="s1">&#39;Normal&#39;</span><span class="p">:</span> <span class="s1">&#39;Normal sinus rhythm&#39;</span><span class="p">,</span>
-<span class="s1">&#39;AF&#39;</span><span class="p">:</span> <span class="s1">&#39;Atrial fibrillation&#39;</span><span class="p">,</span>
-<span class="s1">&#39;I-AVB&#39;</span><span class="p">:</span> <span class="s1">&#39;Airst-degree atrioventricular block&#39;</span><span class="p">,</span>
-<span class="s1">&#39;LBBB&#39;</span><span class="p">:</span> <span class="s1">&#39;Left bundle branch block&#39;</span><span class="p">,</span>
-<span class="s1">&#39;PAC&#39;</span><span class="p">:</span> <span class="s1">&#39;Premature atrial complex&#39;</span><span class="p">,</span>
-<span class="s1">&#39;PVC&#39;</span><span class="p">:</span> <span class="s1">&#39;Premature ventricular complex&#39;</span><span class="p">,</span>
-<span class="s1">&#39;RBBB&#39;</span><span class="p">:</span> <span class="s1">&#39;Right bundle branch block&#39;</span><span class="p">,</span>
-<span class="s1">&#39;STD&#39;</span><span class="p">:</span> <span class="s1">&#39;ST-segment depression&#39;</span><span class="p">,</span>
-<span class="s1">&#39;STE&#39;</span><span class="p">:</span> <span class="s1">&#39;ST-segment elevation&#39;</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Models to choose from [tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet] # inception</span>
-<span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;tf_efficientnet_b7_ns&#39;</span> <span class="c1"># 600</span>
-<span class="c1"># model_name = &#39;tf_efficientnet_b6_ns&#39; # 528</span>
-<span class="c1"># model_name = &#39;resnet&#39; # 224</span>
-
-<span class="c1"># resume training on a prior model</span>
-<span class="n">resume_training</span> <span class="o">=</span> <span class="kc">True</span>
-
-<span class="c1"># Batch size for training (change depending on how much memory you have, and how large the model is)</span>
-<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">40</span> <span class="c1"># 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 45 didn&#39;t work. These images are only a few kb so I&#39;m not sure what&#39;s driving that scaling...</span>
-
-<span class="c1"># Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.</span>
-<span class="n">feature_extract</span> <span class="o">=</span> <span class="kc">True</span>
-
-<span class="c1"># use pretrained model, should probably remain True.</span>
-<span class="n">use_pretrained</span><span class="o">=</span><span class="kc">True</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Models to choose from [&#39;tf_efficientnet_b7_ns&#39;, resnet, alexnet, vgg, squeezenet, densenet] # inception</span>
+<span class="c1"># model_name = &#39;tf_efficientnet_b7_ns&#39;</span>
+<span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;resnet&#39;</span>
 
 <span class="c1"># Number of classes in the dataset</span>
-<span class="n">n_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">n_classes</span> <span class="o">=</span> <span class="mi">9</span>
 
-<span class="c1"># path to data dir</span>
-<span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/mount_sinai_health_hackathon_ekg_img/data&#39;</span><span class="p">)</span>
-
-<span class="c1"># resolution of preprocessed images</span>
-<span class="n">im_res</span> <span class="o">=</span> <span class="mi">600</span>
-<span class="c1"># im_res=224</span>
+<span class="n">feature_extract</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">use_pretrained</span><span class="o">=</span><span class="kc">False</span>
 </pre></div>
 
     </div>
@@ -13213,7 +13137,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;../output/</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s1">&#39;</span>
@@ -13230,93 +13154,10 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<h3 id="Make-Training-Deterministic">Make Training Deterministic<a class="anchor-link" href="#Make-Training-Deterministic">&#182;</a></h3><p>See <a href="https://pytorch.org/docs/stable/notes/randomness.html">Pytorch's Docs on Reproducibility</a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rnd_seed</span><span class="o">=</span><span class="mi">42</span>
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="p">)</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">deterministic</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">cudnn</span><span class="o">.</span><span class="n">benchmark</span> <span class="o">=</span> <span class="kc">False</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<h3 id="Helper-Functions">Helper Functions<a class="anchor-link" href="#Helper-Functions">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">set_parameter_requires_grad</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">feature_extracting</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">feature_extracting</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
             <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Gathers the parameters to be optimized/updated in training. If we are finetuning we will be updating all parameters</span>
-<span class="c1"># However, if we are using the feature extract method, we will only update the parameters that we have just initialized,</span>
-<span class="c1"># i.e. the parameters with requires_grad is True.</span>
-
-<span class="k">def</span> <span class="nf">get_parameter_requires_grad</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">feature_extracting</span><span class="p">,</span> <span class="n">print_not_feature_extracting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">params_to_update</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">feature_extracting</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Params to learn:&#39;</span><span class="p">)</span>
-        <span class="n">params_to_update</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">params_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">print_not_feature_extracting</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Params to learn:&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">print_not_feature_extracting</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">params_to_update</span>
 </pre></div>
 
     </div>
@@ -13334,7 +13175,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">initialize_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">,</span> <span class="n">use_pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -13346,16 +13187,6 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="sd">            Paper: Self-training with Noisy Student improves ImageNet classification (https://arxiv.org/abs/1911.04252)</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">model_ft</span> <span class="o">=</span> <span class="n">timm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s1">&#39;tf_efficientnet_b7_ns&#39;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="n">use_pretrained</span><span class="p">)</span>
-        <span class="n">set_parameter_requires_grad</span><span class="p">(</span><span class="n">model_ft</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">)</span>
-        <span class="n">num_ftrs</span> <span class="o">=</span> <span class="n">model_ft</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">in_features</span>
-        <span class="n">model_ft</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">num_ftrs</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">)</span>
-        <span class="n">input_size</span> <span class="o">=</span> <span class="n">model_ft</span><span class="o">.</span><span class="n">default_cfg</span><span class="p">[</span><span class="s1">&#39;input_size&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-
-    <span class="k">elif</span> <span class="n">model_name</span> <span class="o">==</span> <span class="s1">&#39;tf_efficientnet_b6_ns&#39;</span><span class="p">:</span>
-        <span class="sd">&#39;&#39;&#39; EfficientNet-B6 NoisyStudent. Tensorflow compatible variant</span>
-<span class="sd">            Paper: Self-training with Noisy Student improves ImageNet classification (https://arxiv.org/abs/1911.04252)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">model_ft</span> <span class="o">=</span> <span class="n">timm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s1">&#39;tf_efficientnet_b6_ns&#39;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="n">use_pretrained</span><span class="p">)</span>
         <span class="n">set_parameter_requires_grad</span><span class="p">(</span><span class="n">model_ft</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">)</span>
         <span class="n">num_ftrs</span> <span class="o">=</span> <span class="n">model_ft</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">in_features</span>
         <span class="n">model_ft</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">num_ftrs</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">)</span>
@@ -13434,7 +13265,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="p">,</span> <span class="n">input_size</span> <span class="o">=</span> <span class="n">initialize_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">,</span> <span class="n">use_pretrained</span><span class="p">)</span>
@@ -13447,7 +13278,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;input_size = </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -13457,407 +13288,12 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>input_size = 600
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">im_res</span> <span class="o">&lt;</span> <span class="n">input_size</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Warning, trying to run a model with an input size of </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1">x</span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1"> on images that are only </span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">x</span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">! You can proceed at your own risk, ie upscaling, better to fix one or the other size though!&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># https://pytorch.org/docs/stable/nn.html#crossentropyloss</span>
-<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
-<span class="c1"># TODo if we move to unbalanced classes / full dataset, add weights to correct</span>
-<span class="c1"># reduction=&#39;mean&#39;, return mean CrossEntropyLoss over batches</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">params_to_update</span> <span class="o">=</span> <span class="n">get_parameter_requires_grad</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Params to learn:
-classifier.weight
-classifier.bias
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Setup optimizer</span>
-<span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">params_to_update</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
-<span class="c1"># optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <hr>
-<h1 id="Load-Previously-Trained-Model">Load Previously Trained Model<a class="anchor-link" href="#Load-Previously-Trained-Model">&#182;</a></h1><p>To continue the training in another session</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">resume_training</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Resuming Training!&#39;</span><span class="p">)</span>
-    <span class="n">dfp_train_results_prior</span> <span class="o">=</span> <span class="n">load_dfp</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;train_results&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">cols_bool</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;saved_model&#39;</span><span class="p">],</span>
-                                       <span class="n">cols_float</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;train_loss&#39;</span><span class="p">,</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span><span class="s1">&#39;best_val_loss&#39;</span><span class="p">,</span><span class="s1">&#39;delta_per_best&#39;</span><span class="p">,</span><span class="s1">&#39;elapsed_time&#39;</span><span class="p">,</span><span class="s1">&#39;epoch_time&#39;</span><span class="p">])</span>
-
-    <span class="n">best_epoch</span> <span class="o">=</span> <span class="n">dfp_train_results_prior</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">dfp_train_results_prior</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()][</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span>
-    <span class="n">load_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">best_epoch</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">dfp_train_results_prior</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Resuming Training!
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<h1 id="Load-Data">Load Data<a class="anchor-link" href="#Load-Data">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Compute-Normalization-Factors">Compute Normalization Factors<a class="anchor-link" href="#Compute-Normalization-Factors">&#182;</a></h3>
-</div>
-</div>
-</div>dl_unnormalized = torch.utils.data.DataLoader(
-    tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/train',
-                            transform=transforms.Compose([transforms.Grayscale(num_output_channels=3), transforms.Resize(input_size), transforms.ToTensor()])),
-    batch_size=batch_size, shuffle=False, num_workers=8
-)
-
-pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
-
-print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
-print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># use normalization results computed earlier</span>
-<span class="k">if</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">224</span><span class="p">:</span>
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-    <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-<span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">600</span><span class="p">:</span>
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95724732</span><span class="p">,</span> <span class="mf">0.95724732</span><span class="p">,</span> <span class="mf">0.95724732</span><span class="p">])</span>
-    <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.08290727</span><span class="p">,</span> <span class="mf">0.08290727</span><span class="p">,</span> <span class="mf">0.08290727</span><span class="p">])</span>
-<span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">800</span><span class="p">:</span>
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-    <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No precomputed mean, std available for input_size = </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div># use normalization results used when training the model, only works for timm models. Should probably only use for color images
-pop_mean = np.array(model.default_cfg['mean'])
-pop_std0 = np.array(model.default_cfg['std'])
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_mean = [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.8f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pop_mean</span><span class="p">])</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_std0 = [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.8f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pop_std0</span><span class="p">])</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>pop_mean = [0.95724732, 0.95724732, 0.95724732]
-pop_std0 = [0.08290727, 0.08290727, 0.08290727]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Actually-Load-Data">Actually Load Data<a class="anchor-link" href="#Actually-Load-Data">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># need to fake 3 channels r = b = g with Grayscale to use pretrained networks</span>
-<span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">Grayscale</span><span class="p">(</span><span class="n">num_output_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span><span class="n">input_size</span><span class="p">),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">pop_mean</span><span class="p">,</span> <span class="n">pop_std0</span><span class="p">)])</span>
-
-<span class="n">ds_train</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/preprocessed/im_res_</span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">/train&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
-<span class="n">ds_val</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/preprocessed/im_res_</span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">/val&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_to_idx</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-<span class="n">class_to_idx</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">))</span>
-<span class="n">idx_to_class</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([[</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dl_train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-<span class="n">dl_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># ds_test = tv.datasets.ImageFolder(root=f&#39;{data_path}/preprocessed/im_res_{im_res}/test&#39;, transform=transform)</span>
-<span class="c1"># dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<h1 id="Train">Train<a class="anchor-link" href="#Train">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[25]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">dl_train</span><span class="p">,</span> <span class="n">dl_val</span><span class="p">,</span>
-<span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
-<span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="o">=</span><span class="n">models_path</span><span class="p">,</span>
-<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
-<span class="n">do_es</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">es_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-<span class="n">do_decay_lr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,</span>
-<span class="n">save_model_inhibit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="c1"># don&#39;t save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately</span>
-<span class="n">n_models_on_disk</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="c1"># keep the last n_models_on_disk models on disk, set to -1 to keep all</span>
-<span class="n">dfp_train_results_prior</span><span class="o">=</span><span class="n">dfp_train_results_prior</span> <span class="c1"># dfp_train_results from prior training session, use to resume</span>
-<span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-
- 
- 
-<div id="21e55971-898e-4411-99c8-c223c3f789ef"></div>
-<div class="output_subarea output_widget_view ">
-<script type="text/javascript">
-var element = $('#21e55971-898e-4411-99c8-c223c3f789ef');
-</script>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "6d75a00d8f724a7b999af8efeaca91e4", "version_major": 2, "version_minor": 0}
-</script>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Epoch:   70, Train Loss: 5.580975540, Val Loss: 1.481345859, Delta Best:  -0.064%, Model Saved!
-Epoch:   71, Train Loss: 1.350986471, Val Loss: 1.477746955, Delta Best:  -0.243%, Model Saved!
-Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.026%, Model Saved!
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<h1 id="Eval">Eval<a class="anchor-link" href="#Eval">&#182;</a></h1>
+<h1 id="Load-model-from-disk">Load model from disk<a class="anchor-link" href="#Load-model-from-disk">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -13868,78 +13304,9 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span> <span class="o">=</span> <span class="n">load_dfp</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;train_results&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">cols_bool</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;saved_model&#39;</span><span class="p">],</span>
                              <span class="n">cols_float</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;train_loss&#39;</span><span class="p">,</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span><span class="s1">&#39;best_val_loss&#39;</span><span class="p">,</span><span class="s1">&#39;delta_per_best&#39;</span><span class="p">,</span><span class="s1">&#39;elapsed_time&#39;</span><span class="p">,</span><span class="s1">&#39;epoch_time&#39;</span><span class="p">])</span>
-</pre></div>
 
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_loss_vs_epoch</span><span class="p">(</span><span class="n">dfp_train_results</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;loss_vs_epoch&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;_val&#39;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">y_axis_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;log&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-                   <span class="n">loss_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">],</span>
-                  <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_loss_vs_epoch</span><span class="p">(</span><span class="n">dfp_train_results</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;loss_vs_epoch&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;_train&#39;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">y_axis_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;log&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-                   <span class="n">loss_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;train_loss&#39;</span><span class="p">],</span>
-                  <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
-                   ann_text_std_add=None,
-                   y_axis_params={'log': False},
-                   loss_cols=['train_loss', 'val_loss'],
-                  )
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Load-model-from-disk">Load model from disk<a class="anchor-link" href="#Load-model-from-disk">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">best_epoch</span> <span class="o">=</span> <span class="n">dfp_train_results</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">dfp_train_results</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()][</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span>
-<span class="n">load_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">best_epoch</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="p">)</span>
+<span class="n">best_epoch</span> <span class="o">=</span> <span class="n">dfp_train_results</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">dfp_train_results</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()][</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span>
+<span class="n">load_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="n">best_epoch</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13950,7 +13317,8 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Make-Predictions">Make Predictions<a class="anchor-link" href="#Make-Predictions">&#182;</a></h3>
+<hr>
+<h1 id="Plot-the-Model">Plot the Model<a class="anchor-link" href="#Plot-the-Model">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -13959,7 +13327,7 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">labels</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">get_preds</span><span class="p">(</span><span class="n">dl_val</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># model.eval()</span>
 </pre></div>
 
     </div>
@@ -13972,7 +13340,7 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># labels</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hl_graph</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">build_graph</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">600</span><span class="p">]))</span>
 </pre></div>
 
     </div>
@@ -13985,46 +13353,7 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># preds</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Confusion-Matrix">Confusion Matrix<a class="anchor-link" href="#Confusion-Matrix">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cms</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_val&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;_raw_val&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
-<span class="k">for</span> <span class="n">tag</span><span class="p">,</span><span class="n">norm</span> <span class="ow">in</span> <span class="n">cms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
-                          <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                          <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
-                         <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hl_graph</span>
 </pre></div>
 
     </div>
@@ -14058,7 +13387,7 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>
