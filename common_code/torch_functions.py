@@ -120,18 +120,27 @@ print_CUDA_MEM=False,
 model_is_autoencoder=False,
 save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
 n_models_on_disk=5, # keep the last n_models_on_disk models on disk, set to -1 to keep all
+dfp_train_results_prior=None # dfp_train_results from prior training session, use to resume
 ):
 	float_fmt='.9f'
 
 	best_val_loss = None
 	training_results = []
 	all_val_losses = []
-	# for epoch in tqdm(range(max_epochs), desc='Epoch'):
+	train_session_start = time.time()
+	train_start = train_session_start
+	epoch_start = 0
 
-	train_start = time.time()
+	if dfp_train_results_prior is not None:
+		# resume training
+		best_val_loss = dfp_train_results_prior['best_val_loss'].min()
+		training_results = dfp_train_results_prior.to_dict('records')
+		all_val_losses = dfp_train_results_prior['val_loss'].to_list()
+		train_start = train_session_start - 60*dfp_train_results_prior['elapsed_time'].max()
+		epoch_start = dfp_train_results_prior['epoch'].max() + 1
 
 	epoch_pbar = tqdm(total=max_epochs, desc='Epoch', position=0)
-	for epoch in range(max_epochs):
+	for epoch in range(epoch_start,epoch_start+max_epochs):
 		epoch_start = time.time()
 
 		model.train()
@@ -175,9 +184,11 @@ n_models_on_disk=5, # keep the last n_models_on_disk models on disk, set to -1 t
 			delta_per_best = (val_loss-best_val_loss) / best_val_loss
 
 		now = time.time()
+
+		elapsed_session_time = (now - train_session_start) / 60
 		elapsed_time = (now - train_start) / 60
 		epoch_time = (now - epoch_start) / 60
-		
+
 		epoch_message = f'Epoch: {epoch:4d}, Train Loss: {train_loss:{float_fmt}}, Val Loss: {val_loss:{float_fmt}}, Delta Best: {delta_per_best:8.3%}'
 
 		# Save the model if the val loss is less than our current best
@@ -231,8 +242,8 @@ n_models_on_disk=5, # keep the last n_models_on_disk models on disk, set to -1 t
 		write_dfp(dfp_train_results, models_path, 'train_results', tag='')
 
 		if max_time_min is not None and max_time_min > 0:
-			if max_time_min <= elapsed_time:
-				epoch_pbar.write(f'\nReached max training time of {max_time_min} minutes, stopping!')
+			if max_time_min <= elapsed_session_time:
+				epoch_pbar.write(f'\nReached max training session time of {max_time_min} minutes, stopping!')
 				break
 
 
