@@ -107,13 +107,15 @@ if __name__ == '__main__':
 		random.shuffle(fnames)
 
 		if n_per_class < 0:
-			n_per_class = len(fnames)
+			_n_per_class = len(fnames)
+		else:
+			_n_per_class = n_per_class
 
-		fnames = fnames[:n_per_class]
+		fnames = fnames[:_n_per_class]
 
 		fold_start = 0
 		for fold,frac in folds.items():
-			fold_stop = fold_start + int(n_per_class * frac)
+			fold_stop = fold_start + int(_n_per_class * frac)
 
 			out_class_path = f'{os.path.join(output_path, fold)}/{c}'
 			os.makedirs(out_class_path, exist_ok=True)
