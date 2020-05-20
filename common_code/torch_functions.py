@@ -14,15 +14,19 @@ from .configs import *
 from .pandas_functions import *
 
 ########################################################
-def test_mem():
-	cuda_mem_alloc = torch.cuda.memory_allocated() # bytes
-	print(f'CUDA memory allocated: {humanize.naturalsize(cuda_mem_alloc)}')
-	for obj in gc.get_objects():
-		try:
-			if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-				print(f'type: {type(obj)}, dimensional size: {obj.size()}') # , memory size: {humanize.naturalsize(sys.getsizeof(obj))}') - always 72...
-		except:
-			pass
+def test_mem(print_objects=False):
+	print(f'CUDA memory allocated: {humanize.naturalsize(torch.cuda.memory_allocated())}, cached: {humanize.naturalsize(torch.cuda.memory_cached())}')
+	if print_objects:
+		for obj in gc.get_objects():
+			try:
+				if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+					try:
+						mem = humanize.naturalsize(obj.element_size()*obj.nelement())
+					except:
+						mem = None
+					print(f'type: {type(obj)}, dimensional size: {obj.size()}, memory size: {mem}')
+			except:
+				pass
 
 ########################################################
 # get mean and std deviations per channel for later normalization
@@ -75,8 +79,8 @@ def clean_save_models(model_name, models_path, n_models_to_keep):
 ########################################################
 def load_model(model, device, epoch, model_name, models_path):
 	# model is the base class of the model you want to load, will have loaded model in the end
-	model.to(device)
 	model.load_state_dict(torch.load(os.path.join(models_path, f'{model_name}_{epoch}.model')))
+	model.to(device)
 
 ########################################################
 # learning rate adjustment function that divides the learning rate by 10 every lr_epoch_period=30 epochs, up to lr_n_period_cap=6 times
@@ -204,17 +208,19 @@ dfp_train_results_prior=None # dfp_train_results from prior training session, us
 
 		# Finish epoch_message
 		cuda_mem_alloc = None
+		cuda_mem_cached = None
 		if str(device) == 'cuda':
 			cuda_mem_alloc = torch.cuda.memory_allocated() # bytes
+			cuda_mem_cached = torch.cuda.memory_cached() # bytes
 			if print_CUDA_MEM:
-				epoch_message = f'{epoch_message}, CUDA MEM: {humanize.naturalsize(cuda_mem_alloc)}'
+				epoch_message = f'{epoch_message}, CUDA memory allocated: {humanize.naturalsize(cuda_mem_alloc)}, cached: {humanize.naturalsize(cuda_mem_cached)}'
 
 		if saved_model:
 			epoch_message = f'{epoch_message}, Model Saved!'
 		epoch_pbar.write(epoch_message)
 
 		# save the metrics
-		training_results.append({'epoch': epoch, 'train_loss': train_loss, 'val_loss': val_loss, 'best_val_loss': best_val_loss, 'delta_per_best': delta_per_best, 'saved_model': saved_model, 'elapsed_time': elapsed_time, 'epoch_time': epoch_time, 'cuda_mem_alloc': cuda_mem_alloc})
+		training_results.append({'epoch': epoch, 'train_loss': train_loss, 'val_loss': val_loss, 'best_val_loss': best_val_loss, 'delta_per_best': delta_per_best, 'saved_model': saved_model, 'elapsed_time': elapsed_time, 'epoch_time': epoch_time, 'cuda_mem_alloc': cuda_mem_alloc, 'cuda_mem_cached': cuda_mem_cached})
 		all_val_losses.append(val_loss)
 
 		# check for early stopping
@@ -237,7 +243,7 @@ dfp_train_results_prior=None # dfp_train_results from prior training session, us
 		# end of epoch loop, update pbar and save progress to csv
 		epoch_pbar.update(1)
 
-		dfp_train_results = create_dfp(training_results, target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc'], sort_by=['epoch'], sort_by_ascending=True)
+		dfp_train_results = create_dfp(training_results, target_fixed_cols=['epoch', 'train_loss', 'val_loss', 'best_val_loss', 'delta_per_best', 'saved_model', 'elapsed_time', 'epoch_time', 'cuda_mem_alloc', 'cuda_mem_cached'], sort_by=['epoch'], sort_by_ascending=True)
 
 		write_dfp(dfp_train_results, models_path, 'train_results', tag='')
 
@@ -252,18 +258,20 @@ def get_preds(dl, model, device):
 	all_labels = []
 	all_preds = []
 	model.eval()
-	for (inputs, labels) in dl:
+	with torch.no_grad():
+		for (inputs, labels) in dl:
 			inputs = inputs.to(device)
-			labels = labels.to(device)
 
 			outputs = model(inputs)
 
-			_, preds = torch.max(outputs, 1)
+			preds = torch.argmax(outputs, 1)
 
-			all_labels.append(labels.cpu().numpy())
+			all_labels.append(labels.numpy())
 			all_preds.append(preds.cpu().numpy())
 
 	all_labels = np.concatenate(all_labels).ravel()
 	all_preds = np.concatenate(all_preds).ravel()
+
+	torch.cuda.empty_cache()
 
 	return all_labels, all_preds
