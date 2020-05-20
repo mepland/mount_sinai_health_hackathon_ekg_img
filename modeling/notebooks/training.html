@@ -13184,10 +13184,13 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="c1"># model_name = &#39;resnet&#39; # 224</span>
 
 <span class="c1"># resume training on a prior model</span>
-<span class="n">resume_training</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">resume_training</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># Batch size for training (change depending on how much memory you have, and how large the model is)</span>
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">40</span> <span class="c1"># 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 45 didn&#39;t work. These images are only a few kb so I&#39;m not sure what&#39;s driving that scaling...</span>
+
+<span class="c1"># balance classes by reweighting in loss function</span>
+<span class="n">balance_class_weights</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="c1"># Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.</span>
 <span class="n">feature_extract</span> <span class="o">=</span> <span class="kc">True</span>
@@ -13227,7 +13230,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
@@ -13280,22 +13283,6 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">set_parameter_requires_grad</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">feature_extracting</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">feature_extracting</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
-            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Gathers the parameters to be optimized/updated in training. If we are finetuning we will be updating all parameters</span>
 <span class="c1"># However, if we are using the feature extract method, we will only update the parameters that we have just initialized,</span>
 <span class="c1"># i.e. the parameters with requires_grad is True.</span>
@@ -13317,6 +13304,22 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
                 <span class="k">if</span> <span class="n">print_not_feature_extracting</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">params_to_update</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">set_parameter_requires_grad</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">feature_extracting</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">feature_extracting</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 
     </div>
@@ -13495,22 +13498,6 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># https://pytorch.org/docs/stable/nn.html#crossentropyloss</span>
-<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
-<span class="c1"># TODo if we move to unbalanced classes / full dataset, add weights to correct</span>
-<span class="c1"># reduction=&#39;mean&#39;, return mean CrossEntropyLoss over batches</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">params_to_update</span> <span class="o">=</span> <span class="n">get_parameter_requires_grad</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">feature_extract</span><span class="p">)</span>
 </pre></div>
 
@@ -13541,12 +13528,12 @@ classifier.bias
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Setup optimizer</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">params_to_update</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
-<span class="c1"># optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)</span>
+<span class="c1">#optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)</span>
 </pre></div>
 
     </div>
@@ -13565,7 +13552,7 @@ classifier.bias
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">resume_training</span><span class="p">:</span>
@@ -13581,24 +13568,6 @@ classifier.bias
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Resuming Training!
-</pre>
-</div>
-</div>
-
 </div>
 </div>
 
@@ -13623,25 +13592,25 @@ classifier.bias
     batch_size=batch_size, shuffle=False, num_workers=8
 )
 
-pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
+norm_mean, norm_std0 = compute_channel_norms(dl_unnormalized)
 
-print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
-print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
+print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
+print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># use normalization results computed earlier</span>
 <span class="k">if</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">224</span><span class="p">:</span>
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-    <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">600</span><span class="p">:</span>
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95724732</span><span class="p">,</span> <span class="mf">0.95724732</span><span class="p">,</span> <span class="mf">0.95724732</span><span class="p">])</span>
-    <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.08290727</span><span class="p">,</span> <span class="mf">0.08290727</span><span class="p">,</span> <span class="mf">0.08290727</span><span class="p">])</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95724732</span><span class="p">,</span> <span class="mf">0.95724732</span><span class="p">,</span> <span class="mf">0.95724732</span><span class="p">])</span>
+    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.08290727</span><span class="p">,</span> <span class="mf">0.08290727</span><span class="p">,</span> <span class="mf">0.08290727</span><span class="p">])</span>
 <span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">800</span><span class="p">:</span>
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-    <span class="n">pop_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No precomputed mean, std available for input_size = </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
@@ -13651,15 +13620,15 @@ print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
 </div>
 
 </div># use normalization results used when training the model, only works for timm models. Should probably only use for color images
-pop_mean = np.array(model.default_cfg['mean'])
-pop_std0 = np.array(model.default_cfg['std'])
+norm_mean = np.array(model.default_cfg['mean'])
+norm_std0 = np.array(model.default_cfg['std'])
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_mean = [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.8f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pop_mean</span><span class="p">])</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pop_std0 = [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.8f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pop_std0</span><span class="p">])</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;norm_mean = [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.8f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">norm_mean</span><span class="p">])</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;norm_std0 = [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.8f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">norm_std0</span><span class="p">])</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13676,8 +13645,8 @@ pop_std0 = np.array(model.default_cfg['std'])
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>pop_mean = [0.95724732, 0.95724732, 0.95724732]
-pop_std0 = [0.08290727, 0.08290727, 0.08290727]
+<pre>norm_mean = [0.95724732, 0.95724732, 0.95724732]
+norm_std0 = [0.08290727, 0.08290727, 0.08290727]
 </pre>
 </div>
 </div>
@@ -13695,11 +13664,11 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># need to fake 3 channels r = b = g with Grayscale to use pretrained networks</span>
-<span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">Grayscale</span><span class="p">(</span><span class="n">num_output_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span><span class="n">input_size</span><span class="p">),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">pop_mean</span><span class="p">,</span> <span class="n">pop_std0</span><span class="p">)])</span>
+<span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">Grayscale</span><span class="p">(</span><span class="n">num_output_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span><span class="n">input_size</span><span class="p">),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">norm_mean</span><span class="p">,</span> <span class="n">norm_std0</span><span class="p">)])</span>
 
 <span class="n">ds_train</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/preprocessed/im_res_</span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">/train&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
 <span class="n">ds_val</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/preprocessed/im_res_</span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">/val&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
@@ -13712,14 +13681,30 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_to_idx</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-<span class="n">class_to_idx</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">))</span>
-<span class="n">idx_to_class</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([[</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+<span class="n">class_to_idx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">))</span>
+<span class="n">idx_to_class</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([[</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">class_to_idx</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span>
+
+<span class="n">dl_train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">dl_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13730,20 +13715,6 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[22]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dl_train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-<span class="n">dl_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># ds_test = tv.datasets.ImageFolder(root=f&#39;{data_path}/preprocessed/im_res_{im_res}/test&#39;, transform=transform)</span>
@@ -13757,10 +13728,86 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<h1 id="Setup-Loss-Function">Setup Loss Function<a class="anchor-link" href="#Setup-Loss-Function">&#182;</a></h1><p>Balance class weights or leave with None, ie uniform, weights</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_classes</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_classes</span><span class="p">):</span>
+    <span class="n">idx_class_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">ds_train</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="n">idx</span>
+    <span class="n">class_counts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx_class_tensor</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Counts: </span><span class="si">{</span><span class="n">class_counts</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">balance_class_weights</span><span class="p">:</span>
+    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">class_counts</span>
+    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_weights</span> <span class="o">/</span> <span class="n">class_weights</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_weights</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Weights: </span><span class="si">{</span><span class="n">class_weights</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">class_counts_weighted</span> <span class="o">=</span> <span class="n">class_counts</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">class_counts</span><span class="p">)):</span>
+        <span class="n">class_counts_weighted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">class_counts_weighted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Counts Weighted: </span><span class="si">{</span><span class="n">class_counts_weighted</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">class_weights</span><span class="o">=</span><span class="kc">None</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using default, ie uniform, weights&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Class Counts: tensor([3019., 2102.,  551., 2905., 1710., 1959., 4707., 2479.,  575.])
+Class Weights: tensor([0.1825, 0.2621, 1.0000, 0.1897, 0.3222, 0.2813, 0.1171, 0.2223, 0.9583],
+       device=&#39;cuda:0&#39;)
+Class Counts Weighted: tensor([551., 551., 551., 551., 551., 551., 551., 551., 551.])
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># https://pytorch.org/docs/stable/nn.html#crossentropyloss</span>
+<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">class_weights</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+<span class="c1"># reduction=&#39;mean&#39;, return mean CrossEntropyLoss over batches</span>
 </pre></div>
 
     </div>
@@ -13778,10 +13825,49 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="prompt input_prompt">In&nbsp;[26]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_info</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+    <span class="s1">&#39;model_name&#39;</span><span class="p">:</span> <span class="n">model_name</span><span class="p">,</span>
+    <span class="s1">&#39;optimizer&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   &#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+    <span class="s1">&#39;loss_fn&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">),</span>
+    <span class="s1">&#39;loss_fn.reduction&#39;</span><span class="p">:</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span><span class="p">,</span>
+    <span class="s1">&#39;resume_training&#39;</span><span class="p">:</span> <span class="n">resume_training</span><span class="p">,</span>
+    <span class="s1">&#39;batch_size&#39;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+    <span class="s1">&#39;feature_extract&#39;</span><span class="p">:</span> <span class="n">feature_extract</span><span class="p">,</span>
+    <span class="s1">&#39;use_pretrained&#39;</span><span class="p">:</span> <span class="n">use_pretrained</span><span class="p">,</span>
+    <span class="s1">&#39;balance_class_weights&#39;</span><span class="p">:</span> <span class="n">balance_class_weights</span><span class="p">,</span>
+    <span class="s1">&#39;class_counts&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts</span><span class="p">]),</span>
+    <span class="s1">&#39;class_weights&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_weights</span><span class="p">]),</span>
+    <span class="s1">&#39;data_path&#39;</span><span class="p">:</span> <span class="n">data_path</span><span class="p">,</span>
+    <span class="s1">&#39;input_size&#39;</span><span class="p">:</span> <span class="n">input_size</span><span class="p">,</span>
+    <span class="s1">&#39;im_res&#39;</span><span class="p">:</span> <span class="n">im_res</span><span class="p">,</span>
+    <span class="s1">&#39;rnd_seed&#39;</span><span class="p">:</span> <span class="n">rnd_seed</span><span class="p">,</span>
+    <span class="s1">&#39;norm_mean&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">norm_mean</span><span class="p">]),</span>
+    <span class="s1">&#39;norm_std0&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">norm_std0</span><span class="p">]),</span>
+    <span class="s1">&#39;pin_memory&#39;</span><span class="p">:</span> <span class="n">pin_memory</span><span class="p">,</span>
+    <span class="s1">&#39;n_classes&#39;</span><span class="p">:</span> <span class="n">n_classes</span><span class="p">,</span>
+    <span class="s1">&#39;idx_to_class&#39;</span><span class="p">:</span> <span class="n">idx_to_class</span><span class="p">,</span>
+    <span class="s1">&#39;Dx_classes&#39;</span><span class="p">:</span> <span class="n">Dx_classes</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;model_info.json&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_json</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">f_json</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13797,7 +13883,7 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">dl_train</span><span class="p">,</span> <span class="n">dl_val</span><span class="p">,</span>
 <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
 <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="o">=</span><span class="n">models_path</span><span class="p">,</span>
-<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
+<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
 <span class="n">do_es</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">es_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <span class="n">do_decay_lr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,</span>
 <span class="n">save_model_inhibit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="c1"># don&#39;t save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately</span>
@@ -13824,29 +13910,16 @@ pop_std0 = [0.08290727, 0.08290727, 0.08290727]
 
  
  
-<div id="21e55971-898e-4411-99c8-c223c3f789ef"></div>
+<div id="b6bba06a-9ec3-4b7c-8776-ce8ec0f07419"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#21e55971-898e-4411-99c8-c223c3f789ef');
+var element = $('#b6bba06a-9ec3-4b7c-8776-ce8ec0f07419');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "6d75a00d8f724a7b999af8efeaca91e4", "version_major": 2, "version_minor": 0}
+{"model_id": "04d436f00f7d403a95b955b9c80370bc", "version_major": 2, "version_minor": 0}
 </script>
 </div>
 
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Epoch:   70, Train Loss: 5.580975540, Val Loss: 1.481345859, Delta Best:  -0.064%, Model Saved!
-Epoch:   71, Train Loss: 1.350986471, Val Loss: 1.477746955, Delta Best:  -0.243%, Model Saved!
-Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.026%, Model Saved!
-</pre>
-</div>
 </div>
 
 </div>
@@ -13940,6 +14013,19 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">best_epoch</span> <span class="o">=</span> <span class="n">dfp_train_results</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">dfp_train_results</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()][</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span>
 <span class="n">load_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">best_epoch</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">best_epoch</span>
 </pre></div>
 
     </div>
@@ -14058,7 +14144,33 @@ Epoch:   72, Train Loss: 4491.236773811, Val Loss: 1.477359574, Delta Best:  -0.
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_mem</span><span class="p">(</span><span class="n">print_objects</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>

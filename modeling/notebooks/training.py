@@ -60,10 +60,13 @@ model_name = 'tf_efficientnet_b7_ns' # 600
 # model_name = 'resnet' # 224
 
 # resume training on a prior model
-resume_training = True
+resume_training = False
 
 # Batch size for training (change depending on how much memory you have, and how large the model is)
 batch_size = 40 # 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 45 didn't work. These images are only a few kb so I'm not sure what's driving that scaling...
+
+# balance classes by reweighting in loss function
+balance_class_weights = True
 
 # Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.
 feature_extract = True
@@ -89,7 +92,7 @@ output_path = f'../output/{model_name}'
 models_path = f'../models/{model_name}'
 
 
-# In[ ]:
+# In[6]:
 
 
 # test_mem()
@@ -118,15 +121,6 @@ if torch.backends.cudnn.enabled:
 # In[8]:
 
 
-def set_parameter_requires_grad(model, feature_extracting):
-    if feature_extracting:
-        for param in model.parameters():
-            param.requires_grad = False
-
-
-# In[9]:
-
-
 # Gathers the parameters to be optimized/updated in training. If we are finetuning we will be updating all parameters
 # However, if we are using the feature extract method, we will only update the parameters that we have just initialized,
 # i.e. the parameters with requires_grad is True.
@@ -148,6 +142,15 @@ def get_parameter_requires_grad(model, feature_extracting, print_not_feature_ext
                 if print_not_feature_extracting:
                     print(name)
     return params_to_update
+
+
+# In[9]:
+
+
+def set_parameter_requires_grad(model, feature_extracting):
+    if feature_extracting:
+        for param in model.parameters():
+            param.requires_grad = False
 
 
 # ***
@@ -268,31 +271,22 @@ if im_res < input_size:
 # In[14]:
 
 
-# https://pytorch.org/docs/stable/nn.html#crossentropyloss
-loss_fn = nn.CrossEntropyLoss(weight=None, reduction='mean')
-# TODo if we move to unbalanced classes / full dataset, add weights to correct
-# reduction='mean', return mean CrossEntropyLoss over batches
+params_to_update = get_parameter_requires_grad(model, feature_extract)
 
 
 # In[15]:
 
 
-params_to_update = get_parameter_requires_grad(model, feature_extract)
-
-
-# In[16]:
-
-
 # Setup optimizer
 optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-# optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
+#optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
 
 
 # ***
 # # Load Previously Trained Model
 # To continue the training in another session  
 
-# In[17]:
+# In[16]:
 
 
 if resume_training:
@@ -317,85 +311,155 @@ dl_unnormalized = torch.utils.data.DataLoader(
     batch_size=batch_size, shuffle=False, num_workers=8
 )
 
-pop_mean, pop_std0 = compute_channel_norms(dl_unnormalized)
+norm_mean, norm_std0 = compute_channel_norms(dl_unnormalized)
 
-print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
-print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
-# In[18]:
+print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
+print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
+# In[17]:
 
 
 # use normalization results computed earlier
 if input_size == 224:
-    pop_mean = np.array([])
-    pop_std0 = np.array([])
+    norm_mean = np.array([])
+    norm_std0 = np.array([])
 elif input_size == 600:
-    pop_mean = np.array([0.95724732, 0.95724732, 0.95724732])
-    pop_std0 = np.array([0.08290727, 0.08290727, 0.08290727])
+    norm_mean = np.array([0.95724732, 0.95724732, 0.95724732])
+    norm_std0 = np.array([0.08290727, 0.08290727, 0.08290727])
 elif input_size == 800:
-    pop_mean = np.array([])
-    pop_std0 = np.array([])
+    norm_mean = np.array([])
+    norm_std0 = np.array([])
 else:
     raise ValueError(f'No precomputed mean, std available for input_size = {input_size}')
 
 # use normalization results used when training the model, only works for timm models. Should probably only use for color images
-pop_mean = np.array(model.default_cfg['mean'])
-pop_std0 = np.array(model.default_cfg['std'])
-# In[19]:
+norm_mean = np.array(model.default_cfg['mean'])
+norm_std0 = np.array(model.default_cfg['std'])
+# In[18]:
 
 
-print(f"pop_mean = [{', '.join([f'{v:.8f}' for v in pop_mean])}]")
-print(f"pop_std0 = [{', '.join([f'{v:.8f}' for v in pop_std0])}]")
+print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
+print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
 
 
 # ### Actually Load Data
 
-# In[20]:
+# In[19]:
 
 
 # need to fake 3 channels r = b = g with Grayscale to use pretrained networks
-transform = transforms.Compose([transforms.Grayscale(num_output_channels=3), transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(pop_mean, pop_std0)])
+transform = transforms.Compose([transforms.Grayscale(num_output_channels=3), transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(norm_mean, norm_std0)])
 
 ds_train = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/train', transform=transform)
 ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
 
 
-# In[21]:
+# In[20]:
 
 
 class_to_idx = {}
 for k,v in ds_train.class_to_idx.items():
     class_to_idx[k] = v
-class_to_idx = OrderedDict(sorted(class_to_idx.items(), key=lambda x: x))
-idx_to_class = OrderedDict([[v,k] for k,v in class_to_idx.items()])
+class_to_idx = dict(sorted(class_to_idx.items(), key=lambda x: x))
+idx_to_class = dict([[v,k] for k,v in class_to_idx.items()])
+
+
+# In[21]:
+
+
+pin_memory=True
+
+dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=True, pin_memory=pin_memory, num_workers=8)
+dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, pin_memory=pin_memory, num_workers=8)
 
 
 # In[22]:
-
-
-dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
-dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
-
-
-# In[23]:
 
 
 # ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
 # dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)
 
 
-# In[24]:
+# In[23]:
 
 
 # test_mem()
 
 
 # ***
-# # Train
+# # Setup Loss Function
+# Balance class weights or leave with None, ie uniform, weights  
+
+# In[24]:
+
+
+class_counts = torch.zeros(n_classes)
+for idx in range(n_classes):
+    idx_class_tensor = torch.tensor(ds_train.targets) == idx
+    class_counts[idx] = idx_class_tensor.sum().item()
+print(f'Class Counts: {class_counts}')
+
+if balance_class_weights:
+    class_weights = class_counts.sum() / class_counts
+    class_weights = class_weights / class_weights.max()
+    class_weights = class_weights.to(device)
+    print(f'Class Weights: {class_weights}')
+
+    class_counts_weighted = class_counts
+    for i in range(len(class_counts)):
+        class_counts_weighted[i] = class_weights[i]*class_counts_weighted[i]
+    print(f'Class Counts Weighted: {class_counts_weighted}')
+else:
+    class_weights=None
+    print('Using default, ie uniform, weights')
+
 
 # In[25]:
 
 
+# https://pytorch.org/docs/stable/nn.html#crossentropyloss
+loss_fn = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
+# reduction='mean', return mean CrossEntropyLoss over batches
+
+
+# ***
+# # Train
+
+# In[26]:
+
+
 # test_mem()
+
+
+# In[27]:
+
+
+model_info = {
+    'start_time': str(dt.datetime.now()),
+    'model_name': model_name,
+    'optimizer': str(optimizer).replace('\n   ', ',').replace('\n', ''),
+    'loss_fn': str(loss_fn),
+    'loss_fn.reduction': loss_fn.reduction,
+    'resume_training': resume_training,
+    'batch_size': batch_size,
+    'feature_extract': feature_extract,
+    'use_pretrained': use_pretrained,
+    'balance_class_weights': balance_class_weights,
+    'class_counts': ', '.join([f'{c:.0f}' for c in class_counts]),
+    'class_weights': ', '.join([f'{c:f}' for c in class_weights]),
+    'data_path': data_path,
+    'input_size': input_size,
+    'im_res': im_res,
+    'rnd_seed': rnd_seed,
+    'norm_mean': ', '.join([f'{c:f}' for c in norm_mean]),
+    'norm_std0': ', '.join([f'{c:f}' for c in norm_std0]),
+    'pin_memory': pin_memory,
+    'n_classes': n_classes,
+    'idx_to_class': idx_to_class,
+    'Dx_classes': Dx_classes,
+}
+
+with open(os.path.join(models_path, 'model_info.json'), 'w') as f_json:
+    json.dump(model_info, f_json, sort_keys=False, indent=4)
 
 
 # In[ ]:
@@ -404,7 +468,7 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=300, max_time_min=900,
+max_epochs=300, max_time_min=600,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
 save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
@@ -462,6 +526,12 @@ best_epoch = dfp_train_results.iloc[dfp_train_results['val_loss'].idxmin()]['epo
 load_model(model, device, best_epoch, model_name, models_path)
 
 
+# In[ ]:
+
+
+best_epoch
+
+
 # ### Make Predictions
 
 # In[ ]:
@@ -514,7 +584,19 @@ from common_code import *
 # In[ ]:
 
 
-# test_mem()
+torch.cuda.empty_cache()
+
+
+# In[ ]:
+
+
+test_mem(print_objects=False)
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
