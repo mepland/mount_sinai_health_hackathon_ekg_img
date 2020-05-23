@@ -10,7 +10,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 # ***
 # # Setup
 
-# In[1]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -27,7 +27,7 @@ from torchvision import datasets, transforms
 from sklearn.metrics import confusion_matrix
 
 
-# In[2]:
+# In[ ]:
 
 
 # Check if gpu support is available
@@ -35,7 +35,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'device = {device}')
 
 
-# In[3]:
+# In[ ]:
 
 
 Dx_classes = {
@@ -51,7 +51,7 @@ Dx_classes = {
 }
 
 
-# In[4]:
+# In[ ]:
 
 
 # Models to choose from [tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet] # inception
@@ -85,14 +85,14 @@ im_res = 600
 # im_res=224
 
 
-# In[5]:
+# In[ ]:
 
 
 output_path = f'../output/{model_name}'
 models_path = f'../models/{model_name}'
 
 
-# In[6]:
+# In[ ]:
 
 
 # test_mem()
@@ -102,7 +102,7 @@ models_path = f'../models/{model_name}'
 # ### Make Training Deterministic
 # See [Pytorch's Docs on Reproducibility](https://pytorch.org/docs/stable/notes/randomness.html)  
 
-# In[7]:
+# In[ ]:
 
 
 rnd_seed=42
@@ -118,7 +118,7 @@ if torch.backends.cudnn.enabled:
 # ***
 # ### Helper Functions
 
-# In[8]:
+# In[ ]:
 
 
 # Gathers the parameters to be optimized/updated in training. If we are finetuning we will be updating all parameters
@@ -144,7 +144,7 @@ def get_parameter_requires_grad(model, feature_extracting, print_not_feature_ext
     return params_to_update
 
 
-# In[9]:
+# In[ ]:
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -156,7 +156,7 @@ def set_parameter_requires_grad(model, feature_extracting):
 # ***
 # # Create the Model
 
-# In[10]:
+# In[ ]:
 
 
 def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True):
@@ -249,32 +249,32 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
     return model_ft, input_size
 
 
-# In[11]:
+# In[ ]:
 
 
 model, input_size = initialize_model(model_name, n_classes, feature_extract, use_pretrained)
 
 
-# In[12]:
+# In[ ]:
 
 
 print(f'input_size = {input_size}')
 
 
-# In[13]:
+# In[ ]:
 
 
 if im_res < input_size:
     raise ValueError(f'Warning, trying to run a model with an input size of {input_size}x{input_size} on images that are only {im_res}x{im_res}! You can proceed at your own risk, ie upscaling, better to fix one or the other size though!')
 
 
-# In[14]:
+# In[ ]:
 
 
 params_to_update = get_parameter_requires_grad(model, feature_extract)
 
 
-# In[15]:
+# In[ ]:
 
 
 # Setup optimizer
@@ -286,7 +286,7 @@ optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 # # Load Previously Trained Model
 # To continue the training in another session  
 
-# In[16]:
+# In[ ]:
 
 
 if resume_training:
@@ -315,7 +315,7 @@ norm_mean, norm_std0 = compute_channel_norms(dl_unnormalized)
 
 print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
 print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
-# In[17]:
+# In[ ]:
 
 
 # use normalization results computed earlier
@@ -334,7 +334,7 @@ else:
 # use normalization results used when training the model, only works for timm models. Should probably only use for color images
 norm_mean = np.array(model.default_cfg['mean'])
 norm_std0 = np.array(model.default_cfg['std'])
-# In[18]:
+# In[ ]:
 
 
 print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
@@ -343,7 +343,7 @@ print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
 
 # ### Actually Load Data
 
-# In[19]:
+# In[ ]:
 
 
 # need to fake 3 channels r = b = g with Grayscale to use pretrained networks
@@ -353,7 +353,7 @@ ds_train = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_re
 ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
 
 
-# In[20]:
+# In[ ]:
 
 
 class_to_idx = {}
@@ -363,7 +363,7 @@ class_to_idx = dict(sorted(class_to_idx.items(), key=lambda x: x))
 idx_to_class = dict([[v,k] for k,v in class_to_idx.items()])
 
 
-# In[21]:
+# In[ ]:
 
 
 pin_memory=True
@@ -372,14 +372,14 @@ dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=
 dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, pin_memory=pin_memory, num_workers=8)
 
 
-# In[22]:
+# In[ ]:
 
 
 # ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
 # dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)
 
 
-# In[23]:
+# In[ ]:
 
 
 # test_mem()
@@ -389,7 +389,7 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True
 # # Setup Loss Function
 # Balance class weights or leave with None, ie uniform, weights  
 
-# In[24]:
+# In[ ]:
 
 
 class_counts = torch.zeros(n_classes)
@@ -413,7 +413,7 @@ else:
     print('Using default, ie uniform, weights')
 
 
-# In[25]:
+# In[ ]:
 
 
 # https://pytorch.org/docs/stable/nn.html#crossentropyloss
@@ -424,13 +424,13 @@ loss_fn = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
 # ***
 # # Train
 
-# In[26]:
+# In[ ]:
 
 
 # test_mem()
 
 
-# In[27]:
+# In[ ]:
 
 
 model_info = {
@@ -468,7 +468,7 @@ with open(os.path.join(models_path, 'model_info.json'), 'w') as f_json:
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=300, max_time_min=600,
+max_epochs=300, # max_time_min=600,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
 save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately

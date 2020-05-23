@@ -269,9 +269,10 @@ def get_preds(dl, model, device):
 			all_labels.append(labels.numpy())
 			all_preds.append(preds.cpu().numpy())
 
+			torch.cuda.empty_cache()
+
 	all_labels = np.concatenate(all_labels).ravel()
 	all_preds = np.concatenate(all_preds).ravel()
 
-	torch.cuda.empty_cache()
 
 	return all_labels, all_preds
