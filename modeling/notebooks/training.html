@@ -13173,7 +13173,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="n">resume_training</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># Batch size for training (change depending on how much memory you have, and how large the model is)</span>
-<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">40</span> <span class="c1"># 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 45 didn&#39;t work. These images are only a few kb so I&#39;m not sure what&#39;s driving that scaling...</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">32</span> <span class="c1"># 40</span>
 
 <span class="c1"># balance classes by reweighting in loss function</span>
 <span class="n">balance_class_weights</span> <span class="o">=</span> <span class="kc">True</span>
@@ -13194,8 +13194,8 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="n">im_channels</span><span class="o">=</span><span class="mi">1</span>
 
 <span class="c1"># resolution of preprocessed images</span>
-<span class="c1"># im_res = 800</span>
-<span class="n">im_res</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">im_res</span> <span class="o">=</span> <span class="mi">800</span>
+<span class="c1"># im_res = 600</span>
 </pre></div>
 
     </div>
@@ -13816,6 +13816,7 @@ norm_std0 = np.array(model.default_cfg['std'])
     <span class="s1">&#39;data_path&#39;</span><span class="p">:</span> <span class="n">data_path</span><span class="p">,</span>
     <span class="s1">&#39;input_size&#39;</span><span class="p">:</span> <span class="n">input_size</span><span class="p">,</span>
     <span class="s1">&#39;im_res&#39;</span><span class="p">:</span> <span class="n">im_res</span><span class="p">,</span>
+    <span class="s1">&#39;im_channels&#39;</span><span class="p">:</span> <span class="n">im_channels</span><span class="p">,</span>
     <span class="s1">&#39;rnd_seed&#39;</span><span class="p">:</span> <span class="n">rnd_seed</span><span class="p">,</span>
     <span class="s1">&#39;norm_mean&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">norm_mean</span><span class="p">]),</span>
     <span class="s1">&#39;norm_std0&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">norm_std0</span><span class="p">]),</span>
@@ -13844,7 +13845,7 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">dl_train</span><span class="p">,</span> <span class="n">dl_val</span><span class="p">,</span>
 <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
 <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="o">=</span><span class="n">models_path</span><span class="p">,</span>
-<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
 <span class="n">do_es</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">es_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <span class="n">do_decay_lr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,</span>
 <span class="c1"># save_model_inhibit=10, # don&#39;t save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately</span>

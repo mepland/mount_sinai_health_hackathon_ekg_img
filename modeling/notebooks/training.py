@@ -67,7 +67,7 @@ model_name = 'mobilenetv3_small_dev' # Any dimension, tested at 600
 resume_training = False
 
 # Batch size for training (change depending on how much memory you have, and how large the model is)
-batch_size = 40 # 32 was working with 2.8 GB memory left, 40 works with around 1 GB. 45 didn't work. These images are only a few kb so I'm not sure what's driving that scaling...
+batch_size = 32 # 40
 
 # balance classes by reweighting in loss function
 balance_class_weights = True
@@ -88,8 +88,8 @@ data_path = os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/data')
 im_channels=1
 
 # resolution of preprocessed images
-# im_res = 800
-im_res = 600
+im_res = 800
+# im_res = 600
 
 
 # In[ ]:
@@ -490,6 +490,7 @@ model_info = {
     'data_path': data_path,
     'input_size': input_size,
     'im_res': im_res,
+    'im_channels': im_channels,
     'rnd_seed': rnd_seed,
     'norm_mean': ', '.join([f'{c:f}' for c in norm_mean]),
     'norm_std0': ', '.join([f'{c:f}' for c in norm_std0]),
@@ -511,7 +512,7 @@ with open(os.path.join(models_path, 'model_info.json'), 'w') as f_json:
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=300, max_time_min=120,
+max_epochs=300, max_time_min=180,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
 # save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
