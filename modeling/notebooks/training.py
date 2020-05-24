@@ -17,11 +17,13 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 import sys, os
 sys.path.append(os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/'))
+sys.path.append(os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/modeling'))
 from common_code import *
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 import timm # pretrained models from rwightman/pytorch-image-models
 import torchvision.models as models # pretrained models from pytorch
+from mobilenetv3 import MobileNetV3 # mobilenetv3 definition
 
 from torchvision import datasets, transforms
 from sklearn.metrics import confusion_matrix
@@ -41,7 +43,7 @@ print(f'device = {device}')
 Dx_classes = {
 'Normal': 'Normal sinus rhythm',
 'AF': 'Atrial fibrillation',
-'I-AVB': 'Airst-degree atrioventricular block',
+'I-AVB': 'First-degree atrioventricular block',
 'LBBB': 'Left bundle branch block',
 'PAC': 'Premature atrial complex',
 'PVC': 'Premature ventricular complex',
@@ -54,8 +56,10 @@ Dx_classes = {
 # In[ ]:
 
 
-# Models to choose from [tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet] # inception
-model_name = 'tf_efficientnet_b7_ns' # 600
+# Models to choose from [mobilenetv3_small_dev, tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet]
+
+model_name = 'mobilenetv3_small_dev' # Any dimension, tested at 600
+# model_name = 'tf_efficientnet_b7_ns' # 600
 # model_name = 'tf_efficientnet_b6_ns' # 528
 # model_name = 'resnet' # 224
 
@@ -68,11 +72,11 @@ batch_size = 40 # 32 was working with 2.8 GB memory left, 40 works with around 1
 # balance classes by reweighting in loss function
 balance_class_weights = True
 
-# Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.
-feature_extract = True
-
 # use pretrained model, should probably remain True.
-use_pretrained=True
+use_pretrained=False # True
+
+# Flag for feature extraction. When True only update the reshaped layer params, when False train the whole model from scratch. Should probably remain True.
+feature_extract = False
 
 # Number of classes in the dataset
 n_classes = len(Dx_classes.keys())
@@ -80,9 +84,25 @@ n_classes = len(Dx_classes.keys())
 # path to data dir
 data_path = os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/data')
 
+# channels of preprocessed images to use, 1 or 3
+im_channels=1
+
 # resolution of preprocessed images
+# im_res = 800
 im_res = 600
-# im_res=224
+
+
+# In[ ]:
+
+
+if '_dev' in model_name:
+    if use_pretrained:
+        raise ValueError('Can not use a pretrained dev model!')
+    if feature_extract and not use_pretrained:
+        raise ValueError('Can not update last feature layer for a non pretrained model!')
+else:
+    if im_channels != 3:
+        raise ValueError('Must have 3 initial color channels for most standard models!')
 
 
 # In[ ]:
@@ -153,6 +173,29 @@ def set_parameter_requires_grad(model, feature_extracting):
             param.requires_grad = False
 
 
+# In[ ]:
+
+
+def mobilenetv3_small_dev(cfgs=None, **kwargs):
+    if cfgs is None:
+        # use original cfgs for mobilentv3 small
+         cfgs = [
+            # k, t, c, SE, HS, s
+            [3,    1,  16, 1, 0, 2],
+            [3,  4.5,  24, 0, 0, 2],
+            [3, 3.67,  24, 0, 0, 1],
+            [5,    4,  40, 1, 1, 2],
+            [5,    6,  40, 1, 1, 1],
+            [5,    6,  40, 1, 1, 1],
+            [5,    3,  48, 1, 1, 1],
+            [5,    3,  48, 1, 1, 1],
+            [5,    6,  96, 1, 1, 2],
+            [5,    6,  96, 1, 1, 1],
+            [5,    6,  96, 1, 1, 1],
+        ]
+    return MobileNetV3(cfgs, mode='small', **kwargs)
+
+
 # ***
 # # Create the Model
 
@@ -160,93 +203,87 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True):
-    model_ft = None
+    model = None
     input_size = 0
 
-    if model_name == 'tf_efficientnet_b7_ns':
+    if model_name == 'mobilenetv3_small_dev':
+        ''' (Modified) MobileNetV3 Small
+            Paper: Searching for MobileNetV3 (https://arxiv.org/abs/1905.02244)
+        '''
+        cfgs = [
+            # k, t, c, SE, HS, s
+            [3,    1,  4, 1, 0, 2],
+            [3,  4.5,  8, 0, 0, 2],
+            [3, 3.67,  8, 0, 0, 1],
+            [5,    4,  16, 1, 1, 2],
+            [5,    6,  16, 1, 1, 1],
+            [5,    6,  30, 1, 1, 1],
+            [5,    3,  30, 1, 1, 1],
+        ]
+        model = mobilenetv3_small_dev(cfgs, num_classes=n_classes, im_channels=im_channels)
+        input_size = im_res
+    elif model_name == 'tf_efficientnet_b7_ns':
         ''' EfficientNet-B7 NoisyStudent. Tensorflow compatible variant
             Paper: Self-training with Noisy Student improves ImageNet classification (https://arxiv.org/abs/1911.04252)
         '''
-        model_ft = timm.create_model('tf_efficientnet_b7_ns', pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier.in_features
-        model_ft.classifier = nn.Linear(num_ftrs, n_classes)
-        input_size = model_ft.default_cfg['input_size'][1]
-
+        model = timm.create_model('tf_efficientnet_b7_ns', pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        num_ftrs = model.classifier.in_features
+        model.classifier = nn.Linear(num_ftrs, n_classes)
+        input_size = model.default_cfg['input_size'][1]
     elif model_name == 'tf_efficientnet_b6_ns':
         ''' EfficientNet-B6 NoisyStudent. Tensorflow compatible variant
             Paper: Self-training with Noisy Student improves ImageNet classification (https://arxiv.org/abs/1911.04252)
         '''
-        model_ft = timm.create_model('tf_efficientnet_b6_ns', pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier.in_features
-        model_ft.classifier = nn.Linear(num_ftrs, n_classes)
-        input_size = model_ft.default_cfg['input_size'][1]
-
+        model = timm.create_model('tf_efficientnet_b6_ns', pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        num_ftrs = model.classifier.in_features
+        model.classifier = nn.Linear(num_ftrs, n_classes)
+        input_size = model.default_cfg['input_size'][1]
     elif model_name == 'resnet':
         ''' Resnet101
         '''
-        model_ft = models.resnet101(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs, n_classes)
+        model = models.resnet101(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, n_classes)
         input_size = 224
-
     elif model_name == 'alexnet':
         ''' Alexnet
         '''
-        model_ft = models.alexnet(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs,n_classes)
+        model = models.alexnet(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        num_ftrs = model.classifier[6].in_features
+        model.classifier[6] = nn.Linear(num_ftrs,n_classes)
         input_size = 224
-
     elif model_name == 'vgg':
         ''' VGG11_bn
         '''
-        model_ft = models.vgg11_bn(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs,n_classes)
+        model = models.vgg11_bn(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        num_ftrs = model.classifier[6].in_features
+        model.classifier[6] = nn.Linear(num_ftrs,n_classes)
         input_size = 224
-
     elif model_name == 'squeezenet':
         ''' Squeezenet
         '''
-        model_ft = models.squeezenet1_0(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        model_ft.classifier[1] = nn.Conv2d(512, n_classes, kernel_size=(1,1), stride=(1,1))
-        model_ft.n_classes = n_classes
+        model = models.squeezenet1_0(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        model.classifier[1] = nn.Conv2d(512, n_classes, kernel_size=(1,1), stride=(1,1))
+        model.n_classes = n_classes
         input_size = 224
-
     elif model_name == 'densenet':
         ''' Densenet
         '''
-        model_ft = models.densenet121(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier.in_features
-        model_ft.classifier = nn.Linear(num_ftrs, n_classes)
+        model = models.densenet121(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, feature_extract)
+        num_ftrs = model.classifier.in_features
+        model.classifier = nn.Linear(num_ftrs, n_classes)
         input_size = 224
-
-#    elif model_name == 'inception':
-#        ''' Inception v3
-#        Be careful, expects (299,299) sized images and has auxiliary output
-#        '''
-#        model_ft = models.inception_v3(pretrained=use_pretrained)
-#        set_parameter_requires_grad(model_ft, feature_extract)
-#        # Handle the auxilary net
-#        num_ftrs = model_ft.AuxLogits.fc.in_features
-#        model_ft.AuxLogits.fc = nn.Linear(num_ftrs, n_classes)
-#        # Handle the primary net
-#        num_ftrs = model_ft.fc.in_features
-#        model_ft.fc = nn.Linear(num_ftrs,n_classes)
-#        input_size = 299
-
     else:
         raise ValueError(f'Invalid model_name = {model_name}')
-        exit()
 
-    return model_ft, input_size
+    return model, input_size
 
 
 # In[ ]:
@@ -271,7 +308,7 @@ if im_res < input_size:
 # In[ ]:
 
 
-params_to_update = get_parameter_requires_grad(model, feature_extract)
+params_to_update = get_parameter_requires_grad(model, feature_extract, print_not_feature_extracting=False)
 
 
 # In[ ]:
@@ -323,13 +360,17 @@ if input_size == 224:
     norm_mean = np.array([])
     norm_std0 = np.array([])
 elif input_size == 600:
-    norm_mean = np.array([0.95724732, 0.95724732, 0.95724732])
-    norm_std0 = np.array([0.08290727, 0.08290727, 0.08290727])
+    norm_mean = np.array([0.95740360, 0.95740360, 0.95740360])
+    norm_std0 = np.array([0.08236791, 0.08236791, 0.08236791])
 elif input_size == 800:
-    norm_mean = np.array([])
-    norm_std0 = np.array([])
+    norm_mean = np.array([0.95808870, 0.95808870, 0.95808870])
+    norm_std0 = np.array([0.09361055, 0.09361055, 0.09361055])
 else:
     raise ValueError(f'No precomputed mean, std available for input_size = {input_size}')
+
+if im_channels == 1:
+    norm_mean = np.array([norm_mean[0]])
+    norm_std0 = np.array([norm_std0[0]])
 
 # use normalization results used when training the model, only works for timm models. Should probably only use for color images
 norm_mean = np.array(model.default_cfg['mean'])
@@ -347,7 +388,7 @@ print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
 
 
 # need to fake 3 channels r = b = g with Grayscale to use pretrained networks
-transform = transforms.Compose([transforms.Grayscale(num_output_channels=3), transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(norm_mean, norm_std0)])
+transform = transforms.Compose([transforms.Grayscale(num_output_channels=im_channels), transforms.Resize(input_size), transforms.ToTensor(), transforms.Normalize(norm_mean, norm_std0)])
 
 ds_train = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/train', transform=transform)
 ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
@@ -452,12 +493,14 @@ model_info = {
     'rnd_seed': rnd_seed,
     'norm_mean': ', '.join([f'{c:f}' for c in norm_mean]),
     'norm_std0': ', '.join([f'{c:f}' for c in norm_std0]),
+    'starting_memory': f'CUDA memory allocated: {humanize.naturalsize(torch.cuda.memory_allocated())}, cached: {humanize.naturalsize(torch.cuda.memory_cached())}',
     'pin_memory': pin_memory,
     'n_classes': n_classes,
     'idx_to_class': idx_to_class,
     'Dx_classes': Dx_classes,
 }
 
+os.makedirs(models_path, exist_ok=True)
 with open(os.path.join(models_path, 'model_info.json'), 'w') as f_json:
     json.dump(model_info, f_json, sort_keys=False, indent=4)
 
@@ -468,10 +511,10 @@ with open(os.path.join(models_path, 'model_info.json'), 'w') as f_json:
 dfp_train_results = train_model(dl_train, dl_val,
 model, optimizer, loss_fn, device,
 model_name=model_name, models_path=models_path,
-max_epochs=300, # max_time_min=600,
+max_epochs=300, max_time_min=120,
 do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
 do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
-save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
+# save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
 n_models_on_disk=3, # keep the last n_models_on_disk models on disk, set to -1 to keep all
 dfp_train_results_prior=dfp_train_results_prior # dfp_train_results from prior training session, use to resume
 )
@@ -512,11 +555,17 @@ plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='_
                    loss_cols=['train_loss'],
                   )
 
-plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=True,
+
+# In[ ]:
+
+
+plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=False,
                    ann_text_std_add=None,
                    y_axis_params={'log': False},
                    loss_cols=['train_loss', 'val_loss'],
                   )
+
+
 # ### Load model from disk
 
 # In[ ]:
