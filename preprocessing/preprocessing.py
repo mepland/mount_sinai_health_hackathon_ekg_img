@@ -18,7 +18,7 @@ from plotting_preprocessing import * # load plotting code
 
 ########################################################
 # function to process a list of ekgs, in parallel
-def process_tranche(in_path, out_path, im_res, slice_time_range, utilization_fraction, n_slices_max, sampling_freq, channel_names, drop_multi, tranche):
+def process_tranche(in_path, out_path, im_res, slice_time_range, utilization_fraction, n_slices_max, sampling_freq, channel_names, drop_multi_Dx, drop_long_Dx, tranche):
 	n_channels = len(channel_names)
 	n_samples_per_slice = int(np.ceil(sampling_freq*slice_time_range))
 	obs_Dx = []
@@ -46,12 +46,15 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, utilization_fra
 
 			# get Dx
 			Dx = header_data[15].replace('#Dx: ', '')
-			if drop_multi:
+			if drop_multi_Dx:
 				if ',' in Dx:
 					# This Dx str has more than one Dx, skip it
 					continue
 				else:
 					Dx = Dx.replace(',', '_')
+
+			if drop_long_Dx and Dx in ['PAC', 'PVC']:
+					continue
 
 			# get channel y values
 			ch_values = {}
@@ -62,7 +65,7 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, utilization_fra
 			n_samples = len(dfp_channels.index)
 
 			# decide n_slices to take
-			n_slices = min(np.floor(utilization_fraction*n_samples / n_samples_per_slice), n_slices_max)
+			n_slices = min(np.floor(utilization_fraction*n_samples / n_samples_per_slice).astype(int), n_slices_max)
 
 			# work out the number of unused samples
 			n_unused_samples = n_samples - n_samples_per_slice*n_slices
@@ -72,7 +75,7 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, utilization_fra
 			# divide the unused samples into n_slices+1 partitions between the slices
 			spaces = np.random.random(n_slices+1)
 			spaces = spaces / np.sum(spaces)
-			spaces = np.floor(n_unused_samples*spaces)
+			spaces = np.floor(n_unused_samples*spaces).astype(int)
 
 			m_path = f'{out_path}/{Dx}'
 			if Dx not in obs_Dx:
@@ -121,15 +124,16 @@ if __name__ == '__main__':
 	parser.add_argument('-i', '--input_path', dest='input_path', type=str, default='../data/PhysioNetChallenge2020_Training_CPSC/Training_WFDB', help='Path to top level directory containing the PhysioNet data.')
 	parser.add_argument('-o', '--output_path', dest='output_path', type=str, default='../data/preprocessed', help='Path to output directory. Will actually save to a subdirectory named im_res_{im_res}/all.')
 	parser.add_argument('-n', '--n_ekg_to_process', dest='n_ekg_to_process', type=int, default=-1, help='Number of input EKGs to process, -1 is all.')
-	parser.add_argument('-s', '--size', dest='im_res', type=int, default=600, help='Size of output image (600 produces a 600x600 image).')
+	parser.add_argument('-s', '--size', dest='im_res', type=int, default=800, help='Size of output image (800 produces a 800x800 image).')
 	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=2.5, help='Length of time to sample from an EKG (seconds).')
 	parser.add_argument('--utilization_fraction', dest='utilization_fraction', type=float, default=0.8, help='Fraction of the EKG to use when sampling.')
 	parser.add_argument('--n_slices_max', dest='n_slices_max', type=int, default=10, help='Maximum number of slices to take from a single EKG.')
 	parser.add_argument('--sampling_freq', dest='sampling_freq', type=int, default=500, help='EKG ADC sampling frequency (Hz).')
 	parser.add_argument('-j', '--processes', dest='n_processes', type=int, default=1, help='Number of sub-processes run in parallel.')
 	parser.add_argument('--n_tranches', dest='n_tranches', type=int, default=-1, help='Number of tranches to create for parallel processing, -1 creates 100*n_processes.')
-	parser.add_argument('--drop_multi', dest='drop_multi', action='count', default=1, help='Drop images with multiple Dx.')
-	parser.add_argument('--seed', dest='rnd_seed', type=int, default=42, help='Random seed for reproducibility.')
+	parser.add_argument('--drop_multi_Dx', dest='drop_multi_Dx', action='count', default=1, help='Drop images with multiple Dx.')
+	parser.add_argument('--drop_long_Dx', dest='drop_long_Dx', action='count', default=1, help='Drop images with a PAC or PVC Dx which require long (10 second) slices to classify.')
+	parser.add_argument('--seed', dest='rnd_seed', type=int, default=44, help='Random seed for reproducibility.')
 	parser.add_argument('-v','--verbose', dest='verbose', action='count', default=0, help='Enable verbose output.')
 	parser.add_argument('--debug', dest='debug', action='count', default=0, help='Enable single treaded debugging.')
 
@@ -147,7 +151,8 @@ if __name__ == '__main__':
 	sampling_freq = args.sampling_freq
 	n_processes = args.n_processes
 	n_tranches = args.n_tranches
-	drop_multi = args.drop_multi
+	drop_multi_Dx = args.drop_multi_Dx
+	drop_long_Dx = args.drop_long_Dx
 	rnd_seed = args.rnd_seed
 	verbose = bool(args.verbose)
 	debug = bool(args.debug)
@@ -219,7 +224,7 @@ if __name__ == '__main__':
 	# actually run
 	print(f'n_cores = {n_cores}, using n_processes = {n_processes} for n_tranches = {n_tranches}')
 
-	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, utilization_fraction, n_slices_max, sampling_freq, channel_names, drop_multi)
+	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, utilization_fraction, n_slices_max, sampling_freq, channel_names, drop_multi_Dx, drop_long_Dx)
 
 	if debug:
 		# single threaded debugging
