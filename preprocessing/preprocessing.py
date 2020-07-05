@@ -18,7 +18,7 @@ from plotting_preprocessing import * # load plotting code
 
 ########################################################
 # function to process a list of ekgs, in parallel
-def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, sampling_freq, channel_names, drop_multi, tranche):
+def process_tranche(in_path, out_path, im_res, slice_time_range, utilization_fraction, n_slices_max, sampling_freq, channel_names, drop_multi, tranche):
 	n_channels = len(channel_names)
 	n_samples_per_slice = int(np.ceil(sampling_freq*slice_time_range))
 	obs_Dx = []
@@ -61,9 +61,18 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, s
 			dfp_channels = pd.DataFrame(ch_values)
 			n_samples = len(dfp_channels.index)
 
-			# decide n_slices to take, and where to start them
-			n_slices = min(int(n_samples / n_samples_per_slice), n_slices_max)
-			starts = (1. - (1. / float(n_slices)) )*np.random.random(n_slices)
+			# decide n_slices to take
+			n_slices = min(np.floor(utilization_fraction*n_samples / n_samples_per_slice), n_slices_max)
+
+			# work out the number of unused samples
+			n_unused_samples = n_samples - n_samples_per_slice*n_slices
+			if n_unused_samples <= 0:
+				raise ValueError(f'Should never have n_unused_samples = {n_unused_samples} <=0!')
+
+			# divide the unused samples into n_slices+1 partitions between the slices
+			spaces = np.random.random(n_slices+1)
+			spaces = spaces / np.sum(spaces)
+			spaces = np.floor(n_unused_samples*spaces)
 
 			m_path = f'{out_path}/{Dx}'
 			if Dx not in obs_Dx:
@@ -71,15 +80,19 @@ def process_tranche(in_path, out_path, im_res, slice_time_range, n_slices_max, s
 				obs_Dx.append(Dx)
 
 			# print each slice
-			for islice in range(n_slices):
-				i_slice_start = int(np.ceil(starts[islice]*n_samples))
-				i_slice_stop = i_slice_start+n_samples_per_slice
+			i_sample_pos = 0
+			for i_slice in range(n_slices):
+
+				i_slice_start = i_sample_pos + spaces[i_slice]
+				i_slice_stop = i_slice_start + n_samples_per_slice
+
+				i_sample_pos = i_slice_stop + 1
 
 				plot_waveform(dfp_channels.iloc[i_slice_start:i_slice_stop],
 					channel_names, sampling_freq,
 					m_path=m_path,
-					# fname=f't{tranche_number:04d}-{fname}-s{islice:02d}',
-					fname=f'{fname}-s{islice:02d}',
+					# fname=f't{tranche_number:04d}-{fname}-s{i_slice:02d}',
+					fname=f'{fname}-s{i_slice:02d}',
 					tag='', inline=False,
 					target_time_range=slice_time_range, target_im_res=im_res,
 					run_parallel=True, # Turn off some error checking to speed things up
@@ -110,7 +123,8 @@ if __name__ == '__main__':
 	parser.add_argument('-n', '--n_ekg_to_process', dest='n_ekg_to_process', type=int, default=-1, help='Number of input EKGs to process, -1 is all.')
 	parser.add_argument('-s', '--size', dest='im_res', type=int, default=600, help='Size of output image (600 produces a 600x600 image).')
 	parser.add_argument('--slice_time_range', dest='slice_time_range', type=float, default=2.5, help='Length of time to sample from an EKG (seconds).')
-	parser.add_argument('--n_slices_max', dest='n_slices_max', type=int, default=5, help='Maximum number of slices to take from a single EKG.')
+	parser.add_argument('--utilization_fraction', dest='utilization_fraction', type=float, default=0.8, help='Fraction of the EKG to use when sampling.')
+	parser.add_argument('--n_slices_max', dest='n_slices_max', type=int, default=10, help='Maximum number of slices to take from a single EKG.')
 	parser.add_argument('--sampling_freq', dest='sampling_freq', type=int, default=500, help='EKG ADC sampling frequency (Hz).')
 	parser.add_argument('-j', '--processes', dest='n_processes', type=int, default=1, help='Number of sub-processes run in parallel.')
 	parser.add_argument('--n_tranches', dest='n_tranches', type=int, default=-1, help='Number of tranches to create for parallel processing, -1 creates 100*n_processes.')
@@ -128,6 +142,7 @@ if __name__ == '__main__':
 	n_ekg_to_process = args.n_ekg_to_process
 	im_res = args.im_res
 	slice_time_range = args.slice_time_range
+	utilization_fraction = args.utilization_fraction
 	n_slices_max = args.n_slices_max
 	sampling_freq = args.sampling_freq
 	n_processes = args.n_processes
@@ -151,6 +166,9 @@ if __name__ == '__main__':
 	n_cores = mp.cpu_count()
 	if n_processes > n_cores:
 		raise ValueError(f'Trying to use {n_processes} processes but only have {n_cores} cores!')
+
+	if utilization_fraction <= 0 or 1 < utilization_fraction:
+		raise ValueError(f'Invalid utilization_fraction = {utilization_fraction}!')
 
 	if n_tranches <= 0:
 		n_tranches = 100*n_processes
@@ -201,7 +219,7 @@ if __name__ == '__main__':
 	# actually run
 	print(f'n_cores = {n_cores}, using n_processes = {n_processes} for n_tranches = {n_tranches}')
 
-	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, n_slices_max, sampling_freq, channel_names, drop_multi)
+	process_tranche_partial = partial(process_tranche, input_path, output_path, im_res, slice_time_range, utilization_fraction, n_slices_max, sampling_freq, channel_names, drop_multi)
 
 	if debug:
 		# single threaded debugging
