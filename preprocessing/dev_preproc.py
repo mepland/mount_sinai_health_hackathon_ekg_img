@@ -47,7 +47,7 @@ n_channels = len(channel_names)
 
 # output vars
 # im_res=600
-im_res=600
+im_res=800
 # im_res=224
 
 out_path = f'./output_dev/im_res_{im_res}'
@@ -164,7 +164,7 @@ plot_waveform(dfp_channels.iloc[i_slice_start:i_slice_stop],
     run_parallel=False, # Turn off some error checking to speed things up
     fixed_yaxis_range=True, # Use fixed y-axes range
     show_y_minor_grid=True, # show y minor grid, turn off when running for low resolutions as it doesn't show up anyway
-    show_axes_labels=False, show_tick_labels=False, # turn off axes and tick labels
+    show_axes_labels=True, show_tick_labels=False, # turn off axes and tick labels
 )
 
 
