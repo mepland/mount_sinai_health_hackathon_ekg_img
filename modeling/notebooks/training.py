@@ -25,6 +25,8 @@ import timm # pretrained models from rwightman/pytorch-image-models
 import torchvision.models as models # pretrained models from pytorch
 from mobilenetv3 import MobileNetV3 # mobilenetv3 definition
 
+from torchsummary import summary, summary_string
+
 from torchvision import datasets, transforms
 from sklearn.metrics import confusion_matrix
 
@@ -45,8 +47,8 @@ Dx_classes = {
 'AF': 'Atrial fibrillation',
 'I-AVB': 'First-degree atrioventricular block',
 'LBBB': 'Left bundle branch block',
-'PAC': 'Premature atrial complex',
-'PVC': 'Premature ventricular complex',
+# 'PAC': 'Premature atrial complex',
+# 'PVC': 'Premature ventricular complex',
 'RBBB': 'Right bundle branch block',
 'STD': 'ST-segment depression',
 'STE': 'ST-segment elevation',
@@ -112,12 +114,6 @@ output_path = f'../output/{model_name}'
 models_path = f'../models/{model_name}'
 
 
-# In[ ]:
-
-
-# test_mem()
-
-
 # ***
 # ### Make Training Deterministic
 # See [Pytorch's Docs on Reproducibility](https://pytorch.org/docs/stable/notes/randomness.html)  
@@ -125,7 +121,7 @@ models_path = f'../models/{model_name}'
 # In[ ]:
 
 
-rnd_seed=42
+rnd_seed=44
 np.random.seed(rnd_seed)
 torch.manual_seed(rnd_seed+1)
 if str(device) == 'cuda':
@@ -360,11 +356,11 @@ if input_size == 224:
     norm_mean = np.array([])
     norm_std0 = np.array([])
 elif input_size == 600:
-    norm_mean = np.array([0.95740360, 0.95740360, 0.95740360])
-    norm_std0 = np.array([0.08236791, 0.08236791, 0.08236791])
+    norm_mean = np.array([])
+    norm_std0 = np.array([])
 elif input_size == 800:
-    norm_mean = np.array([0.95808870, 0.95808870, 0.95808870])
-    norm_std0 = np.array([0.09361055, 0.09361055, 0.09361055])
+    norm_mean = np.array([0.95817429, 0.95817429, 0.95817429])
+    norm_std0 = np.array([0.09314190, 0.09314190, 0.09314190])
 else:
     raise ValueError(f'No precomputed mean, std available for input_size = {input_size}')
 
@@ -416,14 +412,8 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True
 # In[ ]:
 
 
-# ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
-# dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)
-
-
-# In[ ]:
-
-
-# test_mem()
+ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
+dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)
 
 
 # ***
@@ -433,33 +423,60 @@ dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True
 # In[ ]:
 
 
-class_counts = torch.zeros(n_classes)
-for idx in range(n_classes):
-    idx_class_tensor = torch.tensor(ds_train.targets) == idx
-    class_counts[idx] = idx_class_tensor.sum().item()
-print(f'Class Counts: {class_counts}')
+def _count_and_weight(ds, verbose=True):
+    class_counts = torch.zeros(n_classes)
 
-if balance_class_weights:
-    class_weights = class_counts.sum() / class_counts
-    class_weights = class_weights / class_weights.max()
-    class_weights = class_weights.to(device)
-    print(f'Class Weights: {class_weights}')
+    for idx in range(n_classes):
+        idx_class_tensor = torch.tensor(ds.targets) == idx
+        class_counts[idx] = idx_class_tensor.sum().item()
 
-    class_counts_weighted = class_counts
-    for i in range(len(class_counts)):
-        class_counts_weighted[i] = class_weights[i]*class_counts_weighted[i]
-    print(f'Class Counts Weighted: {class_counts_weighted}')
-else:
-    class_weights=None
-    print('Using default, ie uniform, weights')
+    if verbose:
+        print(f'Class Counts: {class_counts}')
+
+    if balance_class_weights:
+        class_weights = class_counts.sum() / class_counts
+        class_weights = class_weights / class_weights.max()
+        class_weights = class_weights.to(device)
+        if verbose:
+            print(f'Class Weights: {class_weights}')
+
+            class_counts_weighted = class_counts
+            for i in range(len(class_counts)):
+                class_counts_weighted[i] = class_weights[i]*class_counts_weighted[i]
+            print(f'Class Counts Weighted: {class_counts_weighted}')
+    else:
+        class_weights=None
+        if verbose:
+            print('Using default, ie uniform, weights')
+
+    return class_counts, class_weights
+
+
+# In[ ]:
+
+
+class_counts_train, class_weights_train = _count_and_weight(ds_train)
+
+
+# In[ ]:
+
+
+class_counts_val, class_weights_val = _count_and_weight(ds_val)
+
+
+# In[ ]:
+
+
+class_counts_test, _ = _count_and_weight(ds_test)
 
 
 # In[ ]:
 
 
 # https://pytorch.org/docs/stable/nn.html#crossentropyloss
-loss_fn = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
-# reduction='mean', return mean CrossEntropyLoss over batches
+reduction='mean' # return mean CrossEntropyLoss over batches
+loss_fn_train = nn.CrossEntropyLoss(weight=class_weights_train, reduction=reduction)
+loss_fn_val = nn.CrossEntropyLoss(weight=class_weights_val, reduction=reduction)
 
 
 # ***
@@ -468,25 +485,47 @@ loss_fn = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
 # In[ ]:
 
 
-# test_mem()
+max_epochs=300
+max_time_min=180
+do_es=True
+es_min_val_per_improvement=0.0005
+es_epochs=10
+do_decay_lr=False
+# initial_lr=0.001
+# lr_epoch_period=25
+# lr_n_period_cap=4
 
 
 # In[ ]:
 
 
+summary_str, (total_params, trainable_params) = summary_string(model, (1, input_size, input_size), batch_size=batch_size, device=device)
+model_eval_str = str(model.eval)
+
 model_info = {
     'start_time': str(dt.datetime.now()),
     'model_name': model_name,
+    'total_params': total_params.item(),
+    'trainable_params': trainable_params.item(),
     'optimizer': str(optimizer).replace('\n   ', ',').replace('\n', ''),
-    'loss_fn': str(loss_fn),
-    'loss_fn.reduction': loss_fn.reduction,
+    'loss_fn': str(loss_fn_train),
+    'loss_fn.reduction': loss_fn_train.reduction,
+    'max_epochs': max_epochs,
+    'max_time_min': max_time_min,
+    'do_es': do_es,
+    'es_min_val_per_improvement': es_min_val_per_improvement,
+    'es_epochs': es_epochs,
+    'do_decay_lr': do_decay_lr,
     'resume_training': resume_training,
     'batch_size': batch_size,
     'feature_extract': feature_extract,
     'use_pretrained': use_pretrained,
     'balance_class_weights': balance_class_weights,
-    'class_counts': ', '.join([f'{c:.0f}' for c in class_counts]),
-    'class_weights': ', '.join([f'{c:f}' for c in class_weights]),
+    'class_counts_train': ', '.join([f'{c:.0f}' for c in class_counts_train]),
+    'class_weights_train': ', '.join([f'{c:f}' for c in class_weights_train]),
+    'class_counts_val': ', '.join([f'{c:.0f}' for c in class_counts_val]),
+    'class_weights_val': ', '.join([f'{c:f}' for c in class_weights_val]),
+    'class_counts_test': ', '.join([f'{c:.0f}' for c in class_counts_test]),
     'data_path': data_path,
     'input_size': input_size,
     'im_res': im_res,
@@ -505,16 +544,24 @@ os.makedirs(models_path, exist_ok=True)
 with open(os.path.join(models_path, 'model_info.json'), 'w') as f_json:
     json.dump(model_info, f_json, sort_keys=False, indent=4)
 
+with open(os.path.join(models_path, 'model_summary.txt'), 'w') as f:
+    f.write(summary_str)
+    f.close()
+
+with open(os.path.join(models_path, 'model_eval.txt'), 'w') as f:
+    f.write(model_eval_str)
+    f.close()
+
 
 # In[ ]:
 
 
 dfp_train_results = train_model(dl_train, dl_val,
-model, optimizer, loss_fn, device,
+model, optimizer, loss_fn_train, loss_fn_val, device,
 model_name=model_name, models_path=models_path,
-max_epochs=300, max_time_min=180,
-do_es=True, es_min_val_per_improvement=0.0005, es_epochs=10,
-do_decay_lr=False, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
+max_epochs=max_epochs, max_time_min=max_time_min,
+do_es=do_es, es_min_val_per_improvement=es_min_val_per_improvement, es_epochs=es_epochs,
+do_decay_lr=do_decay_lr, # initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,
 # save_model_inhibit=10, # don't save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately
 n_models_on_disk=3, # keep the last n_models_on_disk models on disk, set to -1 to keep all
 dfp_train_results_prior=dfp_train_results_prior # dfp_train_results from prior training session, use to resume
@@ -622,6 +669,47 @@ for tag,norm in cms.items():
                          )
 
 
+# ### Test Set CM
+
+# In[ ]:
+
+
+labels_test, preds_test = get_preds(dl_test, model, device)
+
+
+# In[ ]:
+
+
+conf_matrix_test = confusion_matrix(y_true=labels_test, y_pred=preds_test, labels=[class_to_idx[k] for k in Dx_classes.keys()])
+
+
+# In[ ]:
+
+
+cms = {'_test': True, '_raw_test': False}
+for tag,norm in cms.items():
+    plot_confusion_matrix(conf_matrix_test, label_names=Dx_classes.keys(),
+                          m_path=output_path, tag=tag, inline=False,
+                          ann_text_std_add=None,
+                          normalize=norm,
+                         )
+
+
+# ***
+# # Model Description
+
+# In[ ]:
+
+
+print(summary_str)
+
+
+# In[ ]:
+
+
+print(model_eval_str)
+
+
 # ***
 # # Dev
 
@@ -641,18 +729,6 @@ torch.cuda.empty_cache()
 
 
 test_mem(print_objects=False)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:

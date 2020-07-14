@@ -13110,6 +13110,8 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="kn">import</span> <span class="nn">torchvision.models</span> <span class="k">as</span> <span class="nn">models</span> <span class="c1"># pretrained models from pytorch</span>
 <span class="kn">from</span> <span class="nn">mobilenetv3</span> <span class="kn">import</span> <span class="n">MobileNetV3</span> <span class="c1"># mobilenetv3 definition</span>
 
+<span class="kn">from</span> <span class="nn">torchsummary</span> <span class="kn">import</span> <span class="n">summary</span><span class="p">,</span> <span class="n">summary_string</span>
+
 <span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
 </pre></div>
@@ -13144,8 +13146,8 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <span class="s1">&#39;AF&#39;</span><span class="p">:</span> <span class="s1">&#39;Atrial fibrillation&#39;</span><span class="p">,</span>
 <span class="s1">&#39;I-AVB&#39;</span><span class="p">:</span> <span class="s1">&#39;First-degree atrioventricular block&#39;</span><span class="p">,</span>
 <span class="s1">&#39;LBBB&#39;</span><span class="p">:</span> <span class="s1">&#39;Left bundle branch block&#39;</span><span class="p">,</span>
-<span class="s1">&#39;PAC&#39;</span><span class="p">:</span> <span class="s1">&#39;Premature atrial complex&#39;</span><span class="p">,</span>
-<span class="s1">&#39;PVC&#39;</span><span class="p">:</span> <span class="s1">&#39;Premature ventricular complex&#39;</span><span class="p">,</span>
+<span class="c1"># &#39;PAC&#39;: &#39;Premature atrial complex&#39;,</span>
+<span class="c1"># &#39;PVC&#39;: &#39;Premature ventricular complex&#39;,</span>
 <span class="s1">&#39;RBBB&#39;</span><span class="p">:</span> <span class="s1">&#39;Right bundle branch block&#39;</span><span class="p">,</span>
 <span class="s1">&#39;STD&#39;</span><span class="p">:</span> <span class="s1">&#39;ST-segment depression&#39;</span><span class="p">,</span>
 <span class="s1">&#39;STE&#39;</span><span class="p">:</span> <span class="s1">&#39;ST-segment elevation&#39;</span><span class="p">,</span>
@@ -13237,19 +13239,6 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13264,7 +13253,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rnd_seed</span><span class="o">=</span><span class="mi">42</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rnd_seed</span><span class="o">=</span><span class="mi">44</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="p">)</span>
 <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">rnd_seed</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
 <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span>
@@ -13601,11 +13590,11 @@ print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
     <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
     <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">600</span><span class="p">:</span>
-    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95740360</span><span class="p">,</span> <span class="mf">0.95740360</span><span class="p">,</span> <span class="mf">0.95740360</span><span class="p">])</span>
-    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.08236791</span><span class="p">,</span> <span class="mf">0.08236791</span><span class="p">,</span> <span class="mf">0.08236791</span><span class="p">])</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">800</span><span class="p">:</span>
-    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95808870</span><span class="p">,</span> <span class="mf">0.95808870</span><span class="p">,</span> <span class="mf">0.95808870</span><span class="p">])</span>
-    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.09361055</span><span class="p">,</span> <span class="mf">0.09361055</span><span class="p">,</span> <span class="mf">0.09361055</span><span class="p">])</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95817429</span><span class="p">,</span> <span class="mf">0.95817429</span><span class="p">,</span> <span class="mf">0.95817429</span><span class="p">])</span>
+    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.09314190</span><span class="p">,</span> <span class="mf">0.09314190</span><span class="p">,</span> <span class="mf">0.09314190</span><span class="p">])</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No precomputed mean, std available for input_size = </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -13697,21 +13686,8 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># ds_test = tv.datasets.ImageFolder(root=f&#39;{data_path}/preprocessed/im_res_{im_res}/test&#39;, transform=transform)</span>
-<span class="c1"># dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ds_test</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/preprocessed/im_res_</span><span class="si">{</span><span class="n">im_res</span><span class="si">}</span><span class="s1">/test&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+<span class="n">dl_test</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_test</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pin_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13733,25 +13709,72 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_classes</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_classes</span><span class="p">):</span>
-    <span class="n">idx_class_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">ds_train</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="n">idx</span>
-    <span class="n">class_counts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx_class_tensor</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Counts: </span><span class="si">{</span><span class="n">class_counts</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">_count_and_weight</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">class_counts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_classes</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="n">balance_class_weights</span><span class="p">:</span>
-    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">class_counts</span>
-    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_weights</span> <span class="o">/</span> <span class="n">class_weights</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_weights</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Weights: </span><span class="si">{</span><span class="n">class_weights</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_classes</span><span class="p">):</span>
+        <span class="n">idx_class_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="n">idx</span>
+        <span class="n">class_counts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx_class_tensor</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
-    <span class="n">class_counts_weighted</span> <span class="o">=</span> <span class="n">class_counts</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">class_counts</span><span class="p">)):</span>
-        <span class="n">class_counts_weighted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">class_counts_weighted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Counts Weighted: </span><span class="si">{</span><span class="n">class_counts_weighted</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">class_weights</span><span class="o">=</span><span class="kc">None</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using default, ie uniform, weights&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Counts: </span><span class="si">{</span><span class="n">class_counts</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">balance_class_weights</span><span class="p">:</span>
+        <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">class_counts</span>
+        <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_weights</span> <span class="o">/</span> <span class="n">class_weights</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">class_weights</span> <span class="o">=</span> <span class="n">class_weights</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Weights: </span><span class="si">{</span><span class="n">class_weights</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">class_counts_weighted</span> <span class="o">=</span> <span class="n">class_counts</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">class_counts</span><span class="p">)):</span>
+                <span class="n">class_counts_weighted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">class_counts_weighted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Class Counts Weighted: </span><span class="si">{</span><span class="n">class_counts_weighted</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">class_weights</span><span class="o">=</span><span class="kc">None</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using default, ie uniform, weights&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">class_counts</span><span class="p">,</span> <span class="n">class_weights</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts_train</span><span class="p">,</span> <span class="n">class_weights_train</span> <span class="o">=</span> <span class="n">_count_and_weight</span><span class="p">(</span><span class="n">ds_train</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts_val</span><span class="p">,</span> <span class="n">class_weights_val</span> <span class="o">=</span> <span class="n">_count_and_weight</span><span class="p">(</span><span class="n">ds_val</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts_test</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_count_and_weight</span><span class="p">(</span><span class="n">ds_test</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13765,8 +13788,9 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># https://pytorch.org/docs/stable/nn.html#crossentropyloss</span>
-<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">class_weights</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
-<span class="c1"># reduction=&#39;mean&#39;, return mean CrossEntropyLoss over batches</span>
+<span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span> <span class="c1"># return mean CrossEntropyLoss over batches</span>
+<span class="n">loss_fn_train</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">class_weights_train</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">)</span>
+<span class="n">loss_fn_val</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">class_weights_val</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13787,7 +13811,15 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># test_mem()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span>
+<span class="n">max_time_min</span><span class="o">=</span><span class="mi">180</span>
+<span class="n">do_es</span><span class="o">=</span><span class="kc">True</span>
+<span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="mf">0.0005</span>
+<span class="n">es_epochs</span><span class="o">=</span><span class="mi">10</span>
+<span class="n">do_decay_lr</span><span class="o">=</span><span class="kc">False</span>
+<span class="c1"># initial_lr=0.001</span>
+<span class="c1"># lr_epoch_period=25</span>
+<span class="c1"># lr_n_period_cap=4</span>
 </pre></div>
 
     </div>
@@ -13800,19 +13832,33 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_info</span> <span class="o">=</span> <span class="p">{</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary_str</span><span class="p">,</span> <span class="p">(</span><span class="n">total_params</span><span class="p">,</span> <span class="n">trainable_params</span><span class="p">)</span> <span class="o">=</span> <span class="n">summary_string</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">input_size</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+<span class="n">model_eval_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">)</span>
+
+<span class="n">model_info</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
     <span class="s1">&#39;model_name&#39;</span><span class="p">:</span> <span class="n">model_name</span><span class="p">,</span>
+    <span class="s1">&#39;total_params&#39;</span><span class="p">:</span> <span class="n">total_params</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+    <span class="s1">&#39;trainable_params&#39;</span><span class="p">:</span> <span class="n">trainable_params</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
     <span class="s1">&#39;optimizer&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   &#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
-    <span class="s1">&#39;loss_fn&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">),</span>
-    <span class="s1">&#39;loss_fn.reduction&#39;</span><span class="p">:</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span><span class="p">,</span>
+    <span class="s1">&#39;loss_fn&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn_train</span><span class="p">),</span>
+    <span class="s1">&#39;loss_fn.reduction&#39;</span><span class="p">:</span> <span class="n">loss_fn_train</span><span class="o">.</span><span class="n">reduction</span><span class="p">,</span>
+    <span class="s1">&#39;max_epochs&#39;</span><span class="p">:</span> <span class="n">max_epochs</span><span class="p">,</span>
+    <span class="s1">&#39;max_time_min&#39;</span><span class="p">:</span> <span class="n">max_time_min</span><span class="p">,</span>
+    <span class="s1">&#39;do_es&#39;</span><span class="p">:</span> <span class="n">do_es</span><span class="p">,</span>
+    <span class="s1">&#39;es_min_val_per_improvement&#39;</span><span class="p">:</span> <span class="n">es_min_val_per_improvement</span><span class="p">,</span>
+    <span class="s1">&#39;es_epochs&#39;</span><span class="p">:</span> <span class="n">es_epochs</span><span class="p">,</span>
+    <span class="s1">&#39;do_decay_lr&#39;</span><span class="p">:</span> <span class="n">do_decay_lr</span><span class="p">,</span>
     <span class="s1">&#39;resume_training&#39;</span><span class="p">:</span> <span class="n">resume_training</span><span class="p">,</span>
     <span class="s1">&#39;batch_size&#39;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
     <span class="s1">&#39;feature_extract&#39;</span><span class="p">:</span> <span class="n">feature_extract</span><span class="p">,</span>
     <span class="s1">&#39;use_pretrained&#39;</span><span class="p">:</span> <span class="n">use_pretrained</span><span class="p">,</span>
     <span class="s1">&#39;balance_class_weights&#39;</span><span class="p">:</span> <span class="n">balance_class_weights</span><span class="p">,</span>
-    <span class="s1">&#39;class_counts&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts</span><span class="p">]),</span>
-    <span class="s1">&#39;class_weights&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_weights</span><span class="p">]),</span>
+    <span class="s1">&#39;class_counts_train&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts_train</span><span class="p">]),</span>
+    <span class="s1">&#39;class_weights_train&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_weights_train</span><span class="p">]),</span>
+    <span class="s1">&#39;class_counts_val&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts_val</span><span class="p">]),</span>
+    <span class="s1">&#39;class_weights_val&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_weights_val</span><span class="p">]),</span>
+    <span class="s1">&#39;class_counts_test&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts_test</span><span class="p">]),</span>
     <span class="s1">&#39;data_path&#39;</span><span class="p">:</span> <span class="n">data_path</span><span class="p">,</span>
     <span class="s1">&#39;input_size&#39;</span><span class="p">:</span> <span class="n">input_size</span><span class="p">,</span>
     <span class="s1">&#39;im_res&#39;</span><span class="p">:</span> <span class="n">im_res</span><span class="p">,</span>
@@ -13830,6 +13876,14 @@ norm_std0 = np.array(model.default_cfg['std'])
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;model_info.json&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_json</span><span class="p">:</span>
     <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">f_json</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;model_summary.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">summary_str</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;model_eval.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">model_eval_str</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -13843,11 +13897,11 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_train_results</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">dl_train</span><span class="p">,</span> <span class="n">dl_val</span><span class="p">,</span>
-<span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
+<span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn_train</span><span class="p">,</span> <span class="n">loss_fn_val</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span>
 <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">models_path</span><span class="o">=</span><span class="n">models_path</span><span class="p">,</span>
-<span class="n">max_epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span>
-<span class="n">do_es</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">es_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-<span class="n">do_decay_lr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,</span>
+<span class="n">max_epochs</span><span class="o">=</span><span class="n">max_epochs</span><span class="p">,</span> <span class="n">max_time_min</span><span class="o">=</span><span class="n">max_time_min</span><span class="p">,</span>
+<span class="n">do_es</span><span class="o">=</span><span class="n">do_es</span><span class="p">,</span> <span class="n">es_min_val_per_improvement</span><span class="o">=</span><span class="n">es_min_val_per_improvement</span><span class="p">,</span> <span class="n">es_epochs</span><span class="o">=</span><span class="n">es_epochs</span><span class="p">,</span>
+<span class="n">do_decay_lr</span><span class="o">=</span><span class="n">do_decay_lr</span><span class="p">,</span> <span class="c1"># initial_lr=0.001, lr_epoch_period=25, lr_n_period_cap=4,</span>
 <span class="c1"># save_model_inhibit=10, # don&#39;t save anything out for the first save_model_inhibit epochs, set to -1 to start saving immediately</span>
 <span class="n">n_models_on_disk</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="c1"># keep the last n_models_on_disk models on disk, set to -1 to keep all</span>
 <span class="n">dfp_train_results_prior</span><span class="o">=</span><span class="n">dfp_train_results_prior</span> <span class="c1"># dfp_train_results from prior training session, use to resume</span>
@@ -14067,6 +14121,92 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Test-Set-CM">Test Set CM<a class="anchor-link" href="#Test-Set-CM">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">labels_test</span><span class="p">,</span> <span class="n">preds_test</span> <span class="o">=</span> <span class="n">get_preds</span><span class="p">(</span><span class="n">dl_test</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">conf_matrix_test</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">labels_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">preds_test</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cms</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;_test&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;_raw_test&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="k">for</span> <span class="n">tag</span><span class="p">,</span><span class="n">norm</span> <span class="ow">in</span> <span class="n">cms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix_test</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                          <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                          <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+                         <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<h1 id="Model-Description">Model Description<a class="anchor-link" href="#Model-Description">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">summary_str</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">model_eval_str</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <hr>
 <h1 id="Dev">Dev<a class="anchor-link" href="#Dev">&#182;</a></h1>
 </div>
@@ -14104,32 +14244,6 @@ norm_std0 = np.array(model.default_cfg['std'])
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_mem</span><span class="p">(</span><span class="n">print_objects</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>

@@ -115,7 +115,7 @@ def get_loss(dl, model, loss_fn, device, model_is_autoencoder=False):
 
 ########################################################
 def train_model(dl_train, dl_val,
-model, optimizer, loss_fn, device,
+model, optimizer, loss_fn_train, loss_fn_val, device,
 model_name, models_path,
 max_epochs, max_time_min=None,
 do_es=True, es_min_val_per_improvement=0.005, es_epochs=10,
@@ -163,9 +163,9 @@ dfp_train_results_prior=None # dfp_train_results from prior training session, us
 			outputs = model(inputs)
 
 			if not model_is_autoencoder:
-				loss = loss_fn(outputs, labels)
+				loss = loss_fn_train(outputs, labels)
 			else:
-				loss = loss_fn(outputs, inputs)
+				loss = loss_fn_train(outputs, inputs)
 
 			# Backpropagate the loss
 			loss.backward()
@@ -177,10 +177,10 @@ dfp_train_results_prior=None # dfp_train_results from prior training session, us
 			decay_lr(optimizer, epoch, initial_lr, lr_epoch_period, lr_n_period_cap)
 
 		# Compute the train_loss here via get_loss, with its own loop through the data, for an apples-to-apples comparison at the end of the epoch's training
-		train_loss = get_loss(dl_train, model, loss_fn, device, model_is_autoencoder=model_is_autoencoder)
+		train_loss = get_loss(dl_train, model, loss_fn_train, device, model_is_autoencoder=model_is_autoencoder)
 
 		# Evaluate on the val set
-		val_loss = get_loss(dl_val, model, loss_fn, device, model_is_autoencoder=model_is_autoencoder)
+		val_loss = get_loss(dl_val, model, loss_fn_val, device, model_is_autoencoder=model_is_autoencoder)
 
 		# Start printing epoch_message
 		delta_per_best = 0

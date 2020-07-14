@@ -19,6 +19,9 @@ humanize
 torch
 torchvision
 
+# pytorch-summary from head
+-e git+git://github.com/sksq96/pytorch-summary.git#egg=pytorch-summary
+
 timm # pretrained models from https://github.com/rwightman/pytorch-image-models
 
 # xgboost
