@@ -64,7 +64,7 @@ vsize = 11 # inches
 aspect_ratio_single = 4.0/3.0
 aspect_ratio_multi = 1.0
 
-plot_png=False
+plot_png=True
 png_dpi=200
 
 std_ann_x = 0.80
