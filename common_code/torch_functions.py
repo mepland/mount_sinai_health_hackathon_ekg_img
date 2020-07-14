@@ -29,6 +29,16 @@ def test_mem(print_objects=False):
 				pass
 
 ########################################################
+# From https://gist.github.com/andrewjong/6b02ff237533b3b2c554701fb53d5c4d#gistcomment-3194218
+class ImageFolderWithPaths(tv.datasets.ImageFolder):
+	def __getitem__(self, index):
+		original_tuple = super(ImageFolderWithPaths, self).__getitem__(index)
+		path = self.imgs[index][0]
+		tuple_with_path = (original_tuple + (path,))
+
+		return tuple_with_path
+
+########################################################
 # get mean and std deviations per channel for later normalization
 # do in minibatches, then take the mean over all the minibatches
 # adapted from: https://forums.fast.ai/t/image-normalization-in-pytorch/7534/7
@@ -254,12 +264,19 @@ dfp_train_results_prior=None # dfp_train_results from prior training session, us
 
 
 ########################################################
-def get_preds(dl, model, device):
+def get_preds(dl, model, device, return_fnames=False):
 	all_labels = []
 	all_preds = []
+	all_fnames = []
 	model.eval()
 	with torch.no_grad():
-		for (inputs, labels) in dl:
+		for _data in dl:
+
+			if return_fnames:
+				inputs, labels, paths = _data
+			else:
+				inputs, labels = _data
+
 			inputs = inputs.to(device)
 
 			outputs = model(inputs)
@@ -269,10 +286,16 @@ def get_preds(dl, model, device):
 			all_labels.append(labels.numpy())
 			all_preds.append(preds.cpu().numpy())
 
+			if return_fnames:
+				for p in paths:
+					all_fnames.append(os.path.basename(p))
+
 			torch.cuda.empty_cache()
 
 	all_labels = np.concatenate(all_labels).ravel()
 	all_preds = np.concatenate(all_preds).ravel()
 
-
-	return all_labels, all_preds
+	if return_fnames:
+		return all_labels, all_preds, all_fnames
+	else:
+		return all_labels, all_preds
