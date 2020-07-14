@@ -6,3 +6,4 @@ data
 *.pyc
 *style_file*.html
 output*
+src/
