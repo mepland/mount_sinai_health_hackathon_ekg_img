@@ -10,7 +10,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 # ***
 # # Setup
 
-# In[ ]:
+# In[1]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -31,7 +31,7 @@ from torchvision import datasets, transforms
 from sklearn.metrics import confusion_matrix
 
 
-# In[ ]:
+# In[2]:
 
 
 # Check if gpu support is available
@@ -39,7 +39,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'device = {device}')
 
 
-# In[ ]:
+# In[3]:
 
 
 Dx_classes = {
@@ -55,7 +55,7 @@ Dx_classes = {
 }
 
 
-# In[ ]:
+# In[4]:
 
 
 # Models to choose from [mobilenetv3_small_dev, tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet]
@@ -93,8 +93,17 @@ im_channels=1
 im_res = 800
 # im_res = 600
 
+# training settings
+do_es=True
+es_min_val_per_improvement=0.0005
+es_epochs=10
+do_decay_lr=False
+# initial_lr=0.001
+# lr_epoch_period=25
+# lr_n_period_cap=4
 
-# In[ ]:
+
+# In[5]:
 
 
 if '_dev' in model_name:
@@ -107,7 +116,7 @@ else:
         raise ValueError('Must have 3 initial color channels for most standard models!')
 
 
-# In[ ]:
+# In[6]:
 
 
 output_path = f'../output/{model_name}'
@@ -118,7 +127,7 @@ models_path = f'../models/{model_name}'
 # ### Make Training Deterministic
 # See [Pytorch's Docs on Reproducibility](https://pytorch.org/docs/stable/notes/randomness.html)  
 
-# In[ ]:
+# In[7]:
 
 
 rnd_seed=44
@@ -134,7 +143,7 @@ if torch.backends.cudnn.enabled:
 # ***
 # ### Helper Functions
 
-# In[ ]:
+# In[8]:
 
 
 # Gathers the parameters to be optimized/updated in training. If we are finetuning we will be updating all parameters
@@ -160,7 +169,7 @@ def get_parameter_requires_grad(model, feature_extracting, print_not_feature_ext
     return params_to_update
 
 
-# In[ ]:
+# In[9]:
 
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -169,7 +178,7 @@ def set_parameter_requires_grad(model, feature_extracting):
             param.requires_grad = False
 
 
-# In[ ]:
+# In[10]:
 
 
 def mobilenetv3_small_dev(cfgs=None, **kwargs):
@@ -195,7 +204,7 @@ def mobilenetv3_small_dev(cfgs=None, **kwargs):
 # ***
 # # Create the Model
 
-# In[ ]:
+# In[11]:
 
 
 def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True):
@@ -282,44 +291,44 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
     return model, input_size
 
 
-# In[ ]:
+# In[12]:
 
 
 model, input_size = initialize_model(model_name, n_classes, feature_extract, use_pretrained)
 
 
-# In[ ]:
+# In[13]:
 
 
 print(f'input_size = {input_size}')
 
 
-# In[ ]:
+# In[14]:
 
 
 if im_res < input_size:
     raise ValueError(f'Warning, trying to run a model with an input size of {input_size}x{input_size} on images that are only {im_res}x{im_res}! You can proceed at your own risk, ie upscaling, better to fix one or the other size though!')
 
 
-# In[ ]:
+# In[15]:
 
 
 params_to_update = get_parameter_requires_grad(model, feature_extract, print_not_feature_extracting=False)
 
 
-# In[ ]:
+# In[16]:
 
 
 # Setup optimizer
 optimizer = torch.optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-#optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
+# optimizer = torch.optim.Adam(params_to_update, weight_decay=1e-5)
 
 
 # ***
 # # Load Previously Trained Model
 # To continue the training in another session  
 
-# In[ ]:
+# In[17]:
 
 
 if resume_training:
@@ -348,7 +357,7 @@ norm_mean, norm_std0 = compute_channel_norms(dl_unnormalized)
 
 print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
 print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
-# In[ ]:
+# In[18]:
 
 
 # use normalization results computed earlier
@@ -371,7 +380,7 @@ if im_channels == 1:
 # use normalization results used when training the model, only works for timm models. Should probably only use for color images
 norm_mean = np.array(model.default_cfg['mean'])
 norm_std0 = np.array(model.default_cfg['std'])
-# In[ ]:
+# In[19]:
 
 
 print(f"norm_mean = [{', '.join([f'{v:.8f}' for v in norm_mean])}]")
@@ -380,7 +389,7 @@ print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
 
 # ### Actually Load Data
 
-# In[ ]:
+# In[20]:
 
 
 # need to fake 3 channels r = b = g with Grayscale to use pretrained networks
@@ -390,7 +399,7 @@ ds_train = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_re
 ds_val = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
 
 
-# In[ ]:
+# In[21]:
 
 
 class_to_idx = {}
@@ -400,7 +409,7 @@ class_to_idx = dict(sorted(class_to_idx.items(), key=lambda x: x))
 idx_to_class = dict([[v,k] for k,v in class_to_idx.items()])
 
 
-# In[ ]:
+# In[22]:
 
 
 pin_memory=True
@@ -409,7 +418,7 @@ dl_train = torch.utils.data.DataLoader(ds_train, batch_size=batch_size, shuffle=
 dl_val = torch.utils.data.DataLoader(ds_val, batch_size=batch_size, shuffle=True, pin_memory=pin_memory, num_workers=8)
 
 
-# In[ ]:
+# In[23]:
 
 
 ds_test = tv.datasets.ImageFolder(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
@@ -420,7 +429,7 @@ dl_test = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, shuffle=Fa
 # # Setup Loss Function
 # Balance class weights or leave with None, ie uniform, weights  
 
-# In[ ]:
+# In[24]:
 
 
 def _count_and_weight(ds, verbose=True):
@@ -452,25 +461,25 @@ def _count_and_weight(ds, verbose=True):
     return class_counts, class_weights
 
 
-# In[ ]:
+# In[25]:
 
 
 class_counts_train, class_weights_train = _count_and_weight(ds_train)
 
 
-# In[ ]:
+# In[26]:
 
 
 class_counts_val, class_weights_val = _count_and_weight(ds_val)
 
 
-# In[ ]:
+# In[27]:
 
 
 class_counts_test, _ = _count_and_weight(ds_test)
 
 
-# In[ ]:
+# In[28]:
 
 
 # https://pytorch.org/docs/stable/nn.html#crossentropyloss
@@ -487,13 +496,6 @@ loss_fn_val = nn.CrossEntropyLoss(weight=class_weights_val, reduction=reduction)
 
 max_epochs=300
 max_time_min=180
-do_es=True
-es_min_val_per_improvement=0.0005
-es_epochs=10
-do_decay_lr=False
-# initial_lr=0.001
-# lr_epoch_period=25
-# lr_n_period_cap=4
 
 
 # In[ ]:
@@ -571,20 +573,20 @@ dfp_train_results_prior=dfp_train_results_prior # dfp_train_results from prior t
 # ***
 # # Eval
 
-# In[ ]:
+# In[29]:
 
 
 dfp_train_results = load_dfp(models_path, 'train_results', tag='', cols_bool=['saved_model'],
                              cols_float=['train_loss','val_loss','best_val_loss','delta_per_best','elapsed_time','epoch_time'])
 
 
-# In[ ]:
+# In[30]:
 
 
 dfp_train_results
 
 
-# In[ ]:
+# In[31]:
 
 
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='_val', inline=False,
@@ -594,7 +596,7 @@ plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='_
                   )
 
 
-# In[ ]:
+# In[32]:
 
 
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='_train', inline=False,
@@ -604,7 +606,7 @@ plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='_
                   )
 
 
-# In[ ]:
+# In[33]:
 
 
 plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag='', inline=False,
@@ -616,14 +618,14 @@ plot_loss_vs_epoch(dfp_train_results, output_path, fname='loss_vs_epoch', tag=''
 
 # ### Load model from disk
 
-# In[ ]:
+# In[34]:
 
 
 best_epoch = dfp_train_results.iloc[dfp_train_results['val_loss'].idxmin()]['epoch']
 load_model(model, device, best_epoch, model_name, models_path)
 
 
-# In[ ]:
+# In[35]:
 
 
 best_epoch
@@ -631,59 +633,91 @@ best_epoch
 
 # ### Make Predictions
 
-# In[ ]:
+# #### Load data again, with paths
+# Non-standard but needed to see what images scored high or low
+
+# In[36]:
 
 
-labels, preds = get_preds(dl_val, model, device)
+ds_with_paths_val = ImageFolderWithPaths(root=f'{data_path}/preprocessed/im_res_{im_res}/val', transform=transform)
+dl_with_paths_val = torch.utils.data.DataLoader(ds_with_paths_val, batch_size=batch_size, shuffle=True, pin_memory=pin_memory, num_workers=8)
+
+ds_with_paths_test = ImageFolderWithPaths(root=f'{data_path}/preprocessed/im_res_{im_res}/test', transform=transform)
+dl_with_paths_test = torch.utils.data.DataLoader(ds_with_paths_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)
 
 
-# In[ ]:
+# In[37]:
 
 
-# labels
+def _make_preds_dfp(dl_with_paths, model, device):
+    l, p, f = get_preds(dl_with_paths, model, device, return_fnames=True)
+
+    dfp = pd.DataFrame({'label': l, 'pred': p, 'fname': f})
+
+    dfp['is_correct'] = 0
+    dfp.loc[dfp['label'] == dfp['pred'], 'is_correct'] = 1
+
+    dfp = massage_dfp(dfp, target_fixed_cols=['label', 'pred', 'is_correct', 'fname'],
+                      sort_by=['label', 'is_correct', 'pred', 'fname'], sort_by_ascending=[True, False, True, True])
+
+    return dfp
 
 
-# In[ ]:
+# #### Validation Set
+
+# In[38]:
 
 
-# preds
+dfp_preds_val = _make_preds_dfp(dl_with_paths_val, model, device)
+write_dfp(dfp_preds_val, output_path, 'preds', tag='_val')
 
 
-# ### Confusion Matrix
-
-# In[ ]:
+# In[39]:
 
 
-conf_matrix = confusion_matrix(y_true=labels, y_pred=preds, labels=[class_to_idx[k] for k in Dx_classes.keys()])
+dfp_preds_val
 
 
-# In[ ]:
+# In[40]:
+
+
+conf_matrix_val = confusion_matrix(y_true=dfp_preds_val['label'], y_pred=dfp_preds_val['pred'], labels=[class_to_idx[k] for k in Dx_classes.keys()])
+
+
+# In[41]:
 
 
 cms = {'_val': True, '_raw_val': False}
 for tag,norm in cms.items():
-    plot_confusion_matrix(conf_matrix, label_names=Dx_classes.keys(),
+    plot_confusion_matrix(conf_matrix_val, label_names=Dx_classes.keys(),
                           m_path=output_path, tag=tag, inline=False,
                           ann_text_std_add=None,
                           normalize=norm,
                          )
 
 
-# ### Test Set CM
+# #### Test Set
 
-# In[ ]:
-
-
-labels_test, preds_test = get_preds(dl_test, model, device)
+# In[42]:
 
 
-# In[ ]:
+dfp_preds_test = _make_preds_dfp(dl_with_paths_test, model, device)
+write_dfp(dfp_preds_test, output_path, 'preds', tag='_test')
 
 
-conf_matrix_test = confusion_matrix(y_true=labels_test, y_pred=preds_test, labels=[class_to_idx[k] for k in Dx_classes.keys()])
+# In[43]:
 
 
-# In[ ]:
+dfp_preds_test
+
+
+# In[44]:
+
+
+conf_matrix_test = confusion_matrix(y_true=dfp_preds_test['label'], y_pred=dfp_preds_test['pred'], labels=[class_to_idx[k] for k in Dx_classes.keys()])
+
+
+# In[45]:
 
 
 cms = {'_test': True, '_raw_test': False}
@@ -696,7 +730,15 @@ for tag,norm in cms.items():
 
 
 # ***
-# # Model Description
+# # Dev
+
+# In[ ]:
+
+
+from common_code import *
+
+
+# ### Model Description
 
 # In[ ]:
 
@@ -710,14 +752,7 @@ print(summary_str)
 print(model_eval_str)
 
 
-# ***
-# # Dev
-
-# In[ ]:
-
-
-from common_code import *
-
+# ### Memory Debugging
 
 # In[ ]:
 
