@@ -609,7 +609,7 @@ def plot_loss_vs_epoch(dfp_train_results, m_path, fname='loss_vs_epoch', tag='',
 	ann_and_save(fig, ann_texts, inline, m_path, fname, tag)
 
 ########################################################
-def plot_confusion_matrix(conf_matrix, label_names, m_path, fname='confusion_matrix', tag='', dt_start=None, dt_stop=None, inline=False, ann_text_std_add=None, ann_texts_in=None, normalize=False, x_axis_params=None, y_axis_params=None):
+def plot_confusion_matrix(conf_matrix, label_names, m_path, fname='confusion_matrix', tag='', dt_start=None, dt_stop=None, inline=False, ann_text_std_add=None, ann_texts_in=None, normalize=False, weighted=False, x_axis_params=None, y_axis_params=None):
 # x_axis_params={'axis_label':None, 'min':None, 'max':None}, y_axis_params={'axis_label':None, 'min':None, 'max':None}
 	ann_texts, x_axis_params, y_axis_params = _setup_vars(ann_texts_in, x_axis_params, y_axis_params)
 
@@ -631,6 +631,9 @@ def plot_confusion_matrix(conf_matrix, label_names, m_path, fname='confusion_mat
 		fmt = '.2f'
 		norm = mpl.colors.Normalize(vmin=0., vmax=100.)
 		thresh = 50.
+	elif weighted:
+		z_label = 'Count (Weighted)'
+		fmt = '.2f'
 
 	cmap=std_cmap_r
 
