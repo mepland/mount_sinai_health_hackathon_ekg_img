@@ -58,9 +58,9 @@ Dx_classes = {
 # In[4]:
 
 
-# Models to choose from [mobilenetv3_small_dev, tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet]
+# Models to choose from [mobilenetv3_small_custom, tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet]
 
-model_name = 'mobilenetv3_small_dev' # Any dimension, tested at 600
+model_name = 'mobilenetv3_small_custom' # Any dimension, tested at 600 and 800
 # model_name = 'tf_efficientnet_b7_ns' # 600
 # model_name = 'tf_efficientnet_b6_ns' # 528
 # model_name = 'resnet' # 224
@@ -106,9 +106,9 @@ do_decay_lr=False
 # In[5]:
 
 
-if '_dev' in model_name:
+if '_custom' in model_name:
     if use_pretrained:
-        raise ValueError('Can not use a pretrained dev model!')
+        raise ValueError('Can not use a pretrained custom model!')
     if feature_extract and not use_pretrained:
         raise ValueError('Can not update last feature layer for a non pretrained model!')
 else:
@@ -181,7 +181,7 @@ def set_parameter_requires_grad(model, feature_extracting):
 # In[10]:
 
 
-def mobilenetv3_small_dev(cfgs=None, **kwargs):
+def mobilenetv3_small_custom(cfgs=None, **kwargs):
     if cfgs is None:
         # use original cfgs for mobilentv3 small
          cfgs = [
@@ -211,7 +211,7 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
     model = None
     input_size = 0
 
-    if model_name == 'mobilenetv3_small_dev':
+    if model_name == 'mobilenetv3_small_custom':
         ''' (Modified) MobileNetV3 Small
             Paper: Searching for MobileNetV3 (https://arxiv.org/abs/1905.02244)
         '''
@@ -225,7 +225,7 @@ def initialize_model(model_name, n_classes, feature_extract, use_pretrained=True
             [5,    6,  30, 1, 1, 1],
             [5,    3,  30, 1, 1, 1],
         ]
-        model = mobilenetv3_small_dev(cfgs, num_classes=n_classes, im_channels=im_channels)
+        model = mobilenetv3_small_custom(cfgs, num_classes=n_classes, im_channels=im_channels)
         input_size = im_res
     elif model_name == 'tf_efficientnet_b7_ns':
         ''' EfficientNet-B7 NoisyStudent. Tensorflow compatible variant
@@ -368,8 +368,8 @@ elif input_size == 600:
     norm_mean = np.array([])
     norm_std0 = np.array([])
 elif input_size == 800:
-    norm_mean = np.array([0.95817429, 0.95817429, 0.95817429])
-    norm_std0 = np.array([0.09314190, 0.09314190, 0.09314190])
+    norm_mean = np.array([0.95816243, 0.95816243, 0.95816243])
+    norm_std0 = np.array([0.09317242, 0.09317242, 0.09317242])
 else:
     raise ValueError(f'No precomputed mean, std available for input_size = {input_size}')
 
@@ -476,7 +476,7 @@ class_counts_val, class_weights_val = _count_and_weight(ds_val)
 # In[27]:
 
 
-class_counts_test, _ = _count_and_weight(ds_test)
+class_counts_test, class_weights_test = _count_and_weight(ds_test)
 
 
 # In[28]:
@@ -528,6 +528,7 @@ model_info = {
     'class_counts_val': ', '.join([f'{c:.0f}' for c in class_counts_val]),
     'class_weights_val': ', '.join([f'{c:f}' for c in class_weights_val]),
     'class_counts_test': ', '.join([f'{c:.0f}' for c in class_counts_test]),
+    'class_weights_test': ', '.join([f'{c:f}' for c in class_weights_test]),
     'data_path': data_path,
     'input_size': input_size,
     'im_res': im_res,
@@ -646,6 +647,9 @@ ds_with_paths_test = ImageFolderWithPaths(root=f'{data_path}/preprocessed/im_res
 dl_with_paths_test = torch.utils.data.DataLoader(ds_with_paths_test, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=8)
 
 
+# ### Note on Reweighting
+# We must reweight the confusion matrix to account for different numbers of samples coming from each parent EKG. This avoids biasing the results in favor of longer recordings which generated more samples in the preprocessing steps.
+
 # In[37]:
 
 
@@ -657,7 +661,13 @@ def _make_preds_dfp(dl_with_paths, model, device):
     dfp['is_correct'] = 0
     dfp.loc[dfp['label'] == dfp['pred'], 'is_correct'] = 1
 
-    dfp = massage_dfp(dfp, target_fixed_cols=['label', 'pred', 'is_correct', 'fname'],
+    dfp['parent_ekg'] = dfp['fname'].str.replace('-s\d{2}_PIL\.png', '')
+    dfp['parent_ekg_count'] = dfp.groupby(['parent_ekg'])['parent_ekg'].transform('size')
+    dfp['weight'] = 1.0/dfp['parent_ekg_count']
+
+    dfp = dfp.drop(columns=['parent_ekg', 'parent_ekg_count'])
+
+    dfp = massage_dfp(dfp, target_fixed_cols=['label', 'pred', 'is_correct', 'fname', 'weight'],
                       sort_by=['label', 'is_correct', 'pred', 'fname'], sort_by_ascending=[True, False, True, True])
 
     return dfp
@@ -681,7 +691,7 @@ dfp_preds_val
 # In[40]:
 
 
-conf_matrix_val = confusion_matrix(y_true=dfp_preds_val['label'], y_pred=dfp_preds_val['pred'], labels=[class_to_idx[k] for k in Dx_classes.keys()])
+conf_matrix_val = confusion_matrix(y_true=dfp_preds_val['label'], y_pred=dfp_preds_val['pred'], labels=[class_to_idx[k] for k in Dx_classes.keys()], sample_weight=dfp_preds_val['weight'])
 
 
 # In[41]:
@@ -692,7 +702,7 @@ for tag,norm in cms.items():
     plot_confusion_matrix(conf_matrix_val, label_names=Dx_classes.keys(),
                           m_path=output_path, tag=tag, inline=False,
                           ann_text_std_add=None,
-                          normalize=norm,
+                          normalize=norm, weighted=not norm,
                          )
 
 
@@ -714,7 +724,7 @@ dfp_preds_test
 # In[44]:
 
 
-conf_matrix_test = confusion_matrix(y_true=dfp_preds_test['label'], y_pred=dfp_preds_test['pred'], labels=[class_to_idx[k] for k in Dx_classes.keys()])
+conf_matrix_test = confusion_matrix(y_true=dfp_preds_test['label'], y_pred=dfp_preds_test['pred'], labels=[class_to_idx[k] for k in Dx_classes.keys()], sample_weight=dfp_preds_test['weight'])
 
 
 # In[45]:
@@ -725,8 +735,28 @@ for tag,norm in cms.items():
     plot_confusion_matrix(conf_matrix_test, label_names=Dx_classes.keys(),
                           m_path=output_path, tag=tag, inline=False,
                           ann_text_std_add=None,
-                          normalize=norm,
+                          normalize=norm, weighted=not norm,
                          )
+
+
+# ### Model Description
+
+# In[46]:
+
+
+with open(os.path.join(models_path, 'model_summary.txt'), 'r') as f:
+    summary_str = f.read()
+    print(summary_str)
+    f.close()
+
+
+# In[47]:
+
+
+with open(os.path.join(models_path, 'model_eval.txt'), 'r') as f:
+    model_eval_str = f.read()
+    print(model_eval_str)
+    f.close()
 
 
 # ***
@@ -737,22 +767,6 @@ for tag,norm in cms.items():
 
 from common_code import *
 
-
-# ### Model Description
-
-# In[ ]:
-
-
-print(summary_str)
-
-
-# In[ ]:
-
-
-print(model_eval_str)
-
-
-# ### Memory Debugging
 
 # In[ ]:
 

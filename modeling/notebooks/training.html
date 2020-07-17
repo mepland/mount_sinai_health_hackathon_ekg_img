@@ -13182,9 +13182,9 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Models to choose from [mobilenetv3_small_dev, tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Models to choose from [mobilenetv3_small_custom, tf_efficientnet_b7_ns, tf_efficientnet_b6_ns, resnet, alexnet, vgg, squeezenet, densenet]</span>
 
-<span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenetv3_small_dev&#39;</span> <span class="c1"># Any dimension, tested at 600</span>
+<span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenetv3_small_custom&#39;</span> <span class="c1"># Any dimension, tested at 600 and 800</span>
 <span class="c1"># model_name = &#39;tf_efficientnet_b7_ns&#39; # 600</span>
 <span class="c1"># model_name = &#39;tf_efficientnet_b6_ns&#39; # 528</span>
 <span class="c1"># model_name = &#39;resnet&#39; # 224</span>
@@ -13237,9 +13237,9 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="s1">&#39;_dev&#39;</span> <span class="ow">in</span> <span class="n">model_name</span><span class="p">:</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="s1">&#39;_custom&#39;</span> <span class="ow">in</span> <span class="n">model_name</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">use_pretrained</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Can not use a pretrained dev model!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Can not use a pretrained custom model!&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">feature_extract</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">use_pretrained</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Can not update last feature layer for a non pretrained model!&#39;</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
@@ -13357,7 +13357,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
 <div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mobilenetv3_small_dev</span><span class="p">(</span><span class="n">cfgs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mobilenetv3_small_custom</span><span class="p">(</span><span class="n">cfgs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">cfgs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># use original cfgs for mobilentv3 small</span>
          <span class="n">cfgs</span> <span class="o">=</span> <span class="p">[</span>
@@ -13399,7 +13399,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
     <span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">input_size</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">if</span> <span class="n">model_name</span> <span class="o">==</span> <span class="s1">&#39;mobilenetv3_small_dev&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">model_name</span> <span class="o">==</span> <span class="s1">&#39;mobilenetv3_small_custom&#39;</span><span class="p">:</span>
         <span class="sd">&#39;&#39;&#39; (Modified) MobileNetV3 Small</span>
 <span class="sd">            Paper: Searching for MobileNetV3 (https://arxiv.org/abs/1905.02244)</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -13413,7 +13413,7 @@ get_ipython().system('{sys.executable} -m pip install -r ../requirements.txt');
             <span class="p">[</span><span class="mi">5</span><span class="p">,</span>    <span class="mi">6</span><span class="p">,</span>  <span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
             <span class="p">[</span><span class="mi">5</span><span class="p">,</span>    <span class="mi">3</span><span class="p">,</span>  <span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
         <span class="p">]</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">mobilenetv3_small_dev</span><span class="p">(</span><span class="n">cfgs</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">n_classes</span><span class="p">,</span> <span class="n">im_channels</span><span class="o">=</span><span class="n">im_channels</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">mobilenetv3_small_custom</span><span class="p">(</span><span class="n">cfgs</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">n_classes</span><span class="p">,</span> <span class="n">im_channels</span><span class="o">=</span><span class="n">im_channels</span><span class="p">)</span>
         <span class="n">input_size</span> <span class="o">=</span> <span class="n">im_res</span>
     <span class="k">elif</span> <span class="n">model_name</span> <span class="o">==</span> <span class="s1">&#39;tf_efficientnet_b7_ns&#39;</span><span class="p">:</span>
         <span class="sd">&#39;&#39;&#39; EfficientNet-B7 NoisyStudent. Tensorflow compatible variant</span>
@@ -13638,8 +13638,8 @@ print(f"norm_std0 = [{', '.join([f'{v:.8f}' for v in norm_std0])}]")
     <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
     <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">elif</span> <span class="n">input_size</span> <span class="o">==</span> <span class="mi">800</span><span class="p">:</span>
-    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95817429</span><span class="p">,</span> <span class="mf">0.95817429</span><span class="p">,</span> <span class="mf">0.95817429</span><span class="p">])</span>
-    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.09314190</span><span class="p">,</span> <span class="mf">0.09314190</span><span class="p">,</span> <span class="mf">0.09314190</span><span class="p">])</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.95816243</span><span class="p">,</span> <span class="mf">0.95816243</span><span class="p">,</span> <span class="mf">0.95816243</span><span class="p">])</span>
+    <span class="n">norm_std0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.09317242</span><span class="p">,</span> <span class="mf">0.09317242</span><span class="p">,</span> <span class="mf">0.09317242</span><span class="p">])</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No precomputed mean, std available for input_size = </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -13678,8 +13678,8 @@ norm_std0 = np.array(model.default_cfg['std'])
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>norm_mean = [0.95817429]
-norm_std0 = [0.09314190]
+<pre>norm_mean = [0.95816243]
+norm_std0 = [0.09317242]
 </pre>
 </div>
 </div>
@@ -13829,10 +13829,10 @@ norm_std0 = [0.09314190]
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Class Counts: tensor([2946., 1981.,  522., 2784., 4421., 2278.,  595.])
-Class Weights: tensor([0.1772, 0.2635, 1.0000, 0.1875, 0.1181, 0.2291, 0.8773],
+<pre>Class Counts: tensor([2946., 1958.,  523., 2846., 4411., 2320.,  608.])
+Class Weights: tensor([0.1775, 0.2671, 1.0000, 0.1838, 0.1186, 0.2254, 0.8602],
        device=&#39;cuda:0&#39;)
-Class Counts Weighted: tensor([522., 522., 522., 522., 522., 522., 522.])
+Class Counts Weighted: tensor([523.0000, 522.9999, 523.0000, 523.0000, 523.0000, 523.0000, 523.0000])
 </pre>
 </div>
 </div>
@@ -13863,10 +13863,10 @@ Class Counts Weighted: tensor([522., 522., 522., 522., 522., 522., 522.])
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Class Counts: tensor([601., 377.,  99., 683., 943., 498., 138.])
-Class Weights: tensor([0.1647, 0.2626, 1.0000, 0.1449, 0.1050, 0.1988, 0.7174],
+<pre>Class Counts: tensor([601., 416.,  93., 620., 929., 481., 131.])
+Class Weights: tensor([0.1547, 0.2236, 1.0000, 0.1500, 0.1001, 0.1933, 0.7099],
        device=&#39;cuda:0&#39;)
-Class Counts Weighted: tensor([99.0000, 99.0000, 99.0000, 99.0000, 99.0000, 99.0000, 99.0000])
+Class Counts Weighted: tensor([93.0000, 93.0000, 93.0000, 93.0000, 93.0000, 93.0000, 93.0000])
 </pre>
 </div>
 </div>
@@ -13880,7 +13880,7 @@ Class Counts Weighted: tensor([99.0000, 99.0000, 99.0000, 99.0000, 99.0000, 99.0
 <div class="prompt input_prompt">In&nbsp;[27]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts_test</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_count_and_weight</span><span class="p">(</span><span class="n">ds_test</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">class_counts_test</span><span class="p">,</span> <span class="n">class_weights_test</span> <span class="o">=</span> <span class="n">_count_and_weight</span><span class="p">(</span><span class="n">ds_test</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13897,10 +13897,10 @@ Class Counts Weighted: tensor([99.0000, 99.0000, 99.0000, 99.0000, 99.0000, 99.0
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Class Counts: tensor([146., 102.,  26., 137., 229., 117.,  27.])
-Class Weights: tensor([0.1781, 0.2549, 1.0000, 0.1898, 0.1135, 0.2222, 0.9630],
+<pre>Class Counts: tensor([625., 403., 120., 619., 928., 496., 120.])
+Class Weights: tensor([0.1920, 0.2978, 1.0000, 0.1939, 0.1293, 0.2419, 1.0000],
        device=&#39;cuda:0&#39;)
-Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0000])
+Class Counts Weighted: tensor([120.0000, 120.0000, 120.0000, 120.0000, 120.0000, 120.0000, 120.0000])
 </pre>
 </div>
 </div>
@@ -13979,6 +13979,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
     <span class="s1">&#39;class_counts_val&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts_val</span><span class="p">]),</span>
     <span class="s1">&#39;class_weights_val&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_weights_val</span><span class="p">]),</span>
     <span class="s1">&#39;class_counts_test&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_counts_test</span><span class="p">]),</span>
+    <span class="s1">&#39;class_weights_test&#39;</span><span class="p">:</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">class_weights_test</span><span class="p">]),</span>
     <span class="s1">&#39;data_path&#39;</span><span class="p">:</span> <span class="n">data_path</span><span class="p">,</span>
     <span class="s1">&#39;input_size&#39;</span><span class="p">:</span> <span class="n">input_size</span><span class="p">,</span>
     <span class="s1">&#39;im_res&#39;</span><span class="p">:</span> <span class="n">im_res</span><span class="p">,</span>
@@ -14112,743 +14113,600 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>1.944256</td>
-      <td>1.944318</td>
-      <td>1.944318</td>
+      <td>1.944045</td>
+      <td>1.944432</td>
+      <td>1.944432</td>
       <td>0.000000</td>
       <td>True</td>
-      <td>1.757764</td>
-      <td>1.757556</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.719959</td>
+      <td>1.719750</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1</td>
-      <td>1.942431</td>
-      <td>1.942859</td>
-      <td>1.942859</td>
-      <td>-0.000750</td>
+      <td>1.941513</td>
+      <td>1.942414</td>
+      <td>1.942414</td>
+      <td>-0.001038</td>
       <td>True</td>
-      <td>3.469515</td>
-      <td>1.711350</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>3.416122</td>
+      <td>1.695755</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>2</th>
       <td>2</td>
-      <td>1.938382</td>
-      <td>1.938904</td>
-      <td>1.938904</td>
-      <td>-0.002036</td>
+      <td>1.935181</td>
+      <td>1.938070</td>
+      <td>1.938070</td>
+      <td>-0.002236</td>
       <td>True</td>
-      <td>5.156927</td>
-      <td>1.687121</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>5.111468</td>
+      <td>1.695062</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>3</th>
       <td>3</td>
-      <td>1.922001</td>
-      <td>1.923883</td>
-      <td>1.923883</td>
-      <td>-0.007747</td>
+      <td>1.878736</td>
+      <td>1.896016</td>
+      <td>1.896016</td>
+      <td>-0.021699</td>
       <td>True</td>
-      <td>6.846141</td>
-      <td>1.688931</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>6.805496</td>
+      <td>1.693736</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>4</th>
       <td>4</td>
-      <td>1.764705</td>
-      <td>1.771215</td>
-      <td>1.771215</td>
-      <td>-0.079354</td>
+      <td>1.709899</td>
+      <td>1.744386</td>
+      <td>1.744386</td>
+      <td>-0.079973</td>
       <td>True</td>
-      <td>8.605715</td>
-      <td>1.759290</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>8.499399</td>
+      <td>1.693619</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>5</th>
       <td>5</td>
-      <td>1.680775</td>
-      <td>1.698057</td>
-      <td>1.698057</td>
-      <td>-0.041304</td>
+      <td>1.669752</td>
+      <td>1.699744</td>
+      <td>1.699744</td>
+      <td>-0.025592</td>
       <td>True</td>
-      <td>10.349776</td>
-      <td>1.743752</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>10.189940</td>
+      <td>1.690258</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>6</th>
       <td>6</td>
-      <td>1.669926</td>
-      <td>1.698540</td>
-      <td>1.698057</td>
-      <td>0.000285</td>
-      <td>False</td>
-      <td>12.066547</td>
-      <td>1.716487</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.648135</td>
+      <td>1.686584</td>
+      <td>1.686584</td>
+      <td>-0.007742</td>
+      <td>True</td>
+      <td>11.885094</td>
+      <td>1.694870</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>7</th>
       <td>7</td>
-      <td>1.610062</td>
-      <td>1.639804</td>
-      <td>1.639804</td>
-      <td>-0.034305</td>
+      <td>1.610812</td>
+      <td>1.645744</td>
+      <td>1.645744</td>
+      <td>-0.024215</td>
       <td>True</td>
-      <td>13.782918</td>
-      <td>1.716287</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>13.575628</td>
+      <td>1.690241</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>8</th>
       <td>8</td>
-      <td>1.586892</td>
-      <td>1.627934</td>
-      <td>1.627934</td>
-      <td>-0.007239</td>
+      <td>1.568820</td>
+      <td>1.613060</td>
+      <td>1.613060</td>
+      <td>-0.019860</td>
       <td>True</td>
-      <td>15.501307</td>
-      <td>1.718080</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>15.271691</td>
+      <td>1.695780</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>9</th>
       <td>9</td>
-      <td>1.568295</td>
-      <td>1.602140</td>
-      <td>1.602140</td>
-      <td>-0.015845</td>
+      <td>1.547423</td>
+      <td>1.586713</td>
+      <td>1.586713</td>
+      <td>-0.016333</td>
       <td>True</td>
-      <td>17.192389</td>
-      <td>1.690790</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>16.971641</td>
+      <td>1.699658</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>10</th>
       <td>10</td>
-      <td>1.556777</td>
-      <td>1.620788</td>
-      <td>1.602140</td>
-      <td>0.011639</td>
-      <td>False</td>
-      <td>18.876749</td>
-      <td>1.684060</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.519211</td>
+      <td>1.552478</td>
+      <td>1.552478</td>
+      <td>-0.021576</td>
+      <td>True</td>
+      <td>18.665402</td>
+      <td>1.693469</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>11</th>
       <td>11</td>
-      <td>1.494643</td>
-      <td>1.582375</td>
-      <td>1.582375</td>
-      <td>-0.012337</td>
-      <td>True</td>
-      <td>20.557990</td>
-      <td>1.681157</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.732850</td>
+      <td>1.775037</td>
+      <td>1.552478</td>
+      <td>0.143357</td>
+      <td>False</td>
+      <td>20.358454</td>
+      <td>1.692769</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>12</th>
       <td>12</td>
-      <td>1.439390</td>
-      <td>1.546953</td>
-      <td>1.546953</td>
-      <td>-0.022385</td>
+      <td>1.476497</td>
+      <td>1.527909</td>
+      <td>1.527909</td>
+      <td>-0.015826</td>
       <td>True</td>
-      <td>22.241758</td>
-      <td>1.683484</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>22.045985</td>
+      <td>1.687447</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>13</th>
       <td>13</td>
-      <td>1.441918</td>
-      <td>1.547560</td>
-      <td>1.546953</td>
-      <td>0.000392</td>
+      <td>1.473043</td>
+      <td>1.548228</td>
+      <td>1.527909</td>
+      <td>0.013299</td>
       <td>False</td>
-      <td>23.921055</td>
-      <td>1.679005</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>23.746710</td>
+      <td>1.700442</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>14</th>
       <td>14</td>
-      <td>1.386214</td>
-      <td>1.495626</td>
-      <td>1.495626</td>
-      <td>-0.033179</td>
-      <td>True</td>
-      <td>25.601787</td>
-      <td>1.680640</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.651360</td>
+      <td>1.678878</td>
+      <td>1.527909</td>
+      <td>0.098807</td>
+      <td>False</td>
+      <td>25.442898</td>
+      <td>1.696096</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>15</th>
       <td>15</td>
-      <td>1.362064</td>
-      <td>1.491681</td>
-      <td>1.491681</td>
-      <td>-0.002638</td>
+      <td>1.352985</td>
+      <td>1.424677</td>
+      <td>1.424677</td>
+      <td>-0.067564</td>
       <td>True</td>
-      <td>27.281985</td>
-      <td>1.679906</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>27.141163</td>
+      <td>1.698182</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>16</th>
       <td>16</td>
-      <td>1.277984</td>
-      <td>1.418501</td>
-      <td>1.418501</td>
-      <td>-0.049059</td>
-      <td>True</td>
-      <td>28.958446</td>
-      <td>1.676170</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.678987</td>
+      <td>1.718448</td>
+      <td>1.424677</td>
+      <td>0.206202</td>
+      <td>False</td>
+      <td>28.835183</td>
+      <td>1.693728</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>17</th>
       <td>17</td>
-      <td>1.262203</td>
-      <td>1.399121</td>
-      <td>1.399121</td>
-      <td>-0.013663</td>
+      <td>1.291691</td>
+      <td>1.377351</td>
+      <td>1.377351</td>
+      <td>-0.033219</td>
       <td>True</td>
-      <td>30.642839</td>
-      <td>1.684101</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>30.528552</td>
+      <td>1.693286</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>18</th>
       <td>18</td>
-      <td>1.391391</td>
-      <td>1.551571</td>
-      <td>1.399121</td>
-      <td>0.108961</td>
-      <td>False</td>
-      <td>32.322854</td>
-      <td>1.679723</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.211967</td>
+      <td>1.306961</td>
+      <td>1.306961</td>
+      <td>-0.051105</td>
+      <td>True</td>
+      <td>32.220704</td>
+      <td>1.691868</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>19</th>
       <td>19</td>
-      <td>1.161884</td>
-      <td>1.317204</td>
-      <td>1.317204</td>
-      <td>-0.058549</td>
+      <td>1.134376</td>
+      <td>1.225562</td>
+      <td>1.225562</td>
+      <td>-0.062281</td>
       <td>True</td>
-      <td>34.003277</td>
-      <td>1.680340</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>33.911296</td>
+      <td>1.690300</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>20</th>
       <td>20</td>
-      <td>1.187203</td>
-      <td>1.366946</td>
-      <td>1.317204</td>
-      <td>0.037763</td>
-      <td>False</td>
-      <td>35.682775</td>
-      <td>1.679206</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.048499</td>
+      <td>1.170474</td>
+      <td>1.170474</td>
+      <td>-0.044949</td>
+      <td>True</td>
+      <td>35.619127</td>
+      <td>1.707531</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>21</th>
       <td>21</td>
-      <td>1.283507</td>
-      <td>1.430205</td>
-      <td>1.317204</td>
-      <td>0.085789</td>
-      <td>False</td>
-      <td>37.360996</td>
-      <td>1.678138</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.001748</td>
+      <td>1.116466</td>
+      <td>1.116466</td>
+      <td>-0.046142</td>
+      <td>True</td>
+      <td>37.334557</td>
+      <td>1.715138</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>22</th>
       <td>22</td>
-      <td>1.533681</td>
-      <td>1.716663</td>
-      <td>1.317204</td>
-      <td>0.303263</td>
+      <td>0.978243</td>
+      <td>1.164101</td>
+      <td>1.116466</td>
+      <td>0.042666</td>
       <td>False</td>
-      <td>39.038975</td>
-      <td>1.677896</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>39.032138</td>
+      <td>1.697281</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>23</th>
       <td>23</td>
-      <td>1.015469</td>
-      <td>1.197780</td>
-      <td>1.197780</td>
-      <td>-0.090665</td>
+      <td>0.799305</td>
+      <td>0.937791</td>
+      <td>0.937791</td>
+      <td>-0.160037</td>
       <td>True</td>
-      <td>40.716246</td>
-      <td>1.677179</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>40.734265</td>
+      <td>1.702035</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>24</th>
       <td>24</td>
-      <td>1.471534</td>
-      <td>1.674888</td>
-      <td>1.197780</td>
-      <td>0.398328</td>
+      <td>0.900172</td>
+      <td>1.064285</td>
+      <td>0.937791</td>
+      <td>0.134886</td>
       <td>False</td>
-      <td>42.397078</td>
-      <td>1.680540</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>42.429585</td>
+      <td>1.695029</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>25</th>
       <td>25</td>
-      <td>0.870074</td>
-      <td>1.068967</td>
-      <td>1.068967</td>
-      <td>-0.107543</td>
+      <td>0.735702</td>
+      <td>0.911364</td>
+      <td>0.911364</td>
+      <td>-0.028180</td>
       <td>True</td>
-      <td>44.069744</td>
-      <td>1.672575</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>44.137951</td>
+      <td>1.708274</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>26</th>
       <td>26</td>
-      <td>0.835235</td>
-      <td>1.018272</td>
-      <td>1.018272</td>
-      <td>-0.047425</td>
-      <td>True</td>
-      <td>45.749242</td>
-      <td>1.679206</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>1.146747</td>
+      <td>1.329942</td>
+      <td>0.911364</td>
+      <td>0.459288</td>
+      <td>False</td>
+      <td>45.856591</td>
+      <td>1.718349</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>27</th>
       <td>27</td>
-      <td>0.782179</td>
-      <td>0.984805</td>
-      <td>0.984805</td>
-      <td>-0.032866</td>
+      <td>0.681986</td>
+      <td>0.870155</td>
+      <td>0.870155</td>
+      <td>-0.045217</td>
       <td>True</td>
-      <td>47.426162</td>
-      <td>1.676637</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>47.554615</td>
+      <td>1.697940</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>28</th>
       <td>28</td>
-      <td>0.733734</td>
-      <td>0.927444</td>
-      <td>0.927444</td>
-      <td>-0.058246</td>
-      <td>True</td>
-      <td>49.106477</td>
-      <td>1.680023</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.889877</td>
+      <td>1.043369</td>
+      <td>0.870155</td>
+      <td>0.199062</td>
+      <td>False</td>
+      <td>49.257467</td>
+      <td>1.702569</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>29</th>
       <td>29</td>
-      <td>0.908736</td>
-      <td>1.183005</td>
-      <td>0.927444</td>
-      <td>0.275553</td>
-      <td>False</td>
-      <td>50.785265</td>
-      <td>1.678497</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.623078</td>
+      <td>0.809624</td>
+      <td>0.809624</td>
+      <td>-0.069563</td>
+      <td>True</td>
+      <td>50.968785</td>
+      <td>1.711226</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>30</th>
       <td>30</td>
-      <td>0.705346</td>
-      <td>0.963930</td>
-      <td>0.927444</td>
-      <td>0.039340</td>
+      <td>0.616201</td>
+      <td>0.854710</td>
+      <td>0.809624</td>
+      <td>0.055688</td>
       <td>False</td>
-      <td>52.464054</td>
-      <td>1.678705</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>52.674206</td>
+      <td>1.705129</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>31</th>
       <td>31</td>
-      <td>0.616069</td>
-      <td>0.867149</td>
-      <td>0.867149</td>
-      <td>-0.065012</td>
+      <td>0.524319</td>
+      <td>0.745144</td>
+      <td>0.745144</td>
+      <td>-0.079641</td>
       <td>True</td>
-      <td>54.142901</td>
-      <td>1.678763</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>54.374398</td>
+      <td>1.700108</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>32</th>
       <td>32</td>
-      <td>0.558735</td>
-      <td>0.819805</td>
-      <td>0.819805</td>
-      <td>-0.054598</td>
-      <td>True</td>
-      <td>55.820422</td>
-      <td>1.677229</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.505913</td>
+      <td>0.751899</td>
+      <td>0.745144</td>
+      <td>0.009065</td>
+      <td>False</td>
+      <td>56.066991</td>
+      <td>1.692302</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>33</th>
       <td>33</td>
-      <td>0.600792</td>
-      <td>0.879981</td>
-      <td>0.819805</td>
-      <td>0.073403</td>
-      <td>False</td>
-      <td>57.496741</td>
-      <td>1.676028</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.474497</td>
+      <td>0.725291</td>
+      <td>0.725291</td>
+      <td>-0.026644</td>
+      <td>True</td>
+      <td>57.757491</td>
+      <td>1.690408</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>34</th>
       <td>34</td>
-      <td>0.492250</td>
-      <td>0.818405</td>
-      <td>0.818405</td>
-      <td>-0.001708</td>
-      <td>True</td>
-      <td>59.173445</td>
-      <td>1.676612</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.459235</td>
+      <td>0.746134</td>
+      <td>0.725291</td>
+      <td>0.028738</td>
+      <td>False</td>
+      <td>59.448550</td>
+      <td>1.690767</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>35</th>
       <td>35</td>
-      <td>0.458151</td>
-      <td>0.781986</td>
-      <td>0.781986</td>
-      <td>-0.044500</td>
-      <td>True</td>
-      <td>60.862859</td>
-      <td>1.689114</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.523776</td>
+      <td>0.837726</td>
+      <td>0.725291</td>
+      <td>0.155022</td>
+      <td>False</td>
+      <td>61.148992</td>
+      <td>1.700342</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>36</th>
       <td>36</td>
-      <td>0.439680</td>
-      <td>0.785400</td>
-      <td>0.781986</td>
-      <td>0.004366</td>
-      <td>False</td>
-      <td>62.541772</td>
-      <td>1.678622</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.417842</td>
+      <td>0.721271</td>
+      <td>0.721271</td>
+      <td>-0.005542</td>
+      <td>True</td>
+      <td>62.845455</td>
+      <td>1.696372</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>37</th>
       <td>37</td>
-      <td>0.484232</td>
-      <td>0.844915</td>
-      <td>0.781986</td>
-      <td>0.080473</td>
-      <td>False</td>
-      <td>64.222696</td>
-      <td>1.680824</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.350622</td>
+      <td>0.663873</td>
+      <td>0.663873</td>
+      <td>-0.079578</td>
+      <td>True</td>
+      <td>64.540226</td>
+      <td>1.694478</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>38</th>
       <td>38</td>
-      <td>0.611687</td>
-      <td>1.005136</td>
-      <td>0.781986</td>
-      <td>0.285364</td>
+      <td>0.388312</td>
+      <td>0.715543</td>
+      <td>0.663873</td>
+      <td>0.077831</td>
       <td>False</td>
-      <td>65.898757</td>
-      <td>1.675961</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>66.239216</td>
+      <td>1.698682</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>39</th>
       <td>39</td>
-      <td>0.421994</td>
-      <td>0.809357</td>
-      <td>0.781986</td>
-      <td>0.035002</td>
+      <td>0.434323</td>
+      <td>0.856878</td>
+      <td>0.663873</td>
+      <td>0.290724</td>
       <td>False</td>
-      <td>67.574418</td>
-      <td>1.675569</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>67.929057</td>
+      <td>1.689749</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>40</th>
       <td>40</td>
-      <td>0.384096</td>
-      <td>0.749459</td>
-      <td>0.749459</td>
-      <td>-0.041596</td>
-      <td>True</td>
-      <td>69.260488</td>
-      <td>1.685978</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.606934</td>
+      <td>0.946155</td>
+      <td>0.663873</td>
+      <td>0.425204</td>
+      <td>False</td>
+      <td>69.617122</td>
+      <td>1.687973</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>41</th>
       <td>41</td>
-      <td>0.339013</td>
-      <td>0.731086</td>
-      <td>0.731086</td>
-      <td>-0.024514</td>
-      <td>True</td>
-      <td>70.941345</td>
-      <td>1.680548</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>0.362966</td>
+      <td>0.711233</td>
+      <td>0.663873</td>
+      <td>0.071339</td>
+      <td>False</td>
+      <td>71.307880</td>
+      <td>1.690658</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>42</th>
       <td>42</td>
-      <td>0.457052</td>
-      <td>0.877070</td>
-      <td>0.731086</td>
-      <td>0.199681</td>
+      <td>0.476998</td>
+      <td>0.850972</td>
+      <td>0.663873</td>
+      <td>0.281828</td>
       <td>False</td>
-      <td>72.625062</td>
-      <td>1.683426</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>73.003176</td>
+      <td>1.695204</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>43</th>
       <td>43</td>
-      <td>0.384888</td>
-      <td>0.790493</td>
-      <td>0.731086</td>
-      <td>0.081257</td>
+      <td>0.484428</td>
+      <td>0.900602</td>
+      <td>0.663873</td>
+      <td>0.356587</td>
       <td>False</td>
-      <td>74.306028</td>
-      <td>1.680874</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>74.694369</td>
+      <td>1.691109</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>44</th>
       <td>44</td>
-      <td>0.413956</td>
-      <td>0.868630</td>
-      <td>0.731086</td>
-      <td>0.188135</td>
+      <td>0.276986</td>
+      <td>0.734629</td>
+      <td>0.663873</td>
+      <td>0.106580</td>
       <td>False</td>
-      <td>75.981305</td>
-      <td>1.675177</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>76.388188</td>
+      <td>1.693728</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
     <tr>
       <th>45</th>
       <td>45</td>
-      <td>0.316371</td>
-      <td>0.753844</td>
-      <td>0.731086</td>
-      <td>0.031129</td>
+      <td>0.350959</td>
+      <td>0.792116</td>
+      <td>0.663873</td>
+      <td>0.193174</td>
       <td>False</td>
-      <td>77.658576</td>
-      <td>1.677179</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>46</td>
-      <td>0.394633</td>
-      <td>0.889010</td>
-      <td>0.731086</td>
-      <td>0.216012</td>
-      <td>False</td>
-      <td>79.338790</td>
-      <td>1.680131</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>47</td>
-      <td>0.282782</td>
-      <td>0.754402</td>
-      <td>0.731086</td>
-      <td>0.031891</td>
-      <td>False</td>
-      <td>81.015118</td>
-      <td>1.676228</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>48</td>
-      <td>0.268758</td>
-      <td>0.698146</td>
-      <td>0.698146</td>
-      <td>-0.045056</td>
-      <td>True</td>
-      <td>82.690896</td>
-      <td>1.675686</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>49</td>
-      <td>0.331638</td>
-      <td>0.835844</td>
-      <td>0.698146</td>
-      <td>0.197233</td>
-      <td>False</td>
-      <td>84.368066</td>
-      <td>1.676870</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>50</th>
-      <td>50</td>
-      <td>0.286904</td>
-      <td>0.827466</td>
-      <td>0.698146</td>
-      <td>0.185233</td>
-      <td>False</td>
-      <td>86.039599</td>
-      <td>1.671441</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>51</th>
-      <td>51</td>
-      <td>0.270494</td>
-      <td>0.801067</td>
-      <td>0.698146</td>
-      <td>0.147420</td>
-      <td>False</td>
-      <td>87.718237</td>
-      <td>1.678547</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>52</th>
-      <td>52</td>
-      <td>0.224292</td>
-      <td>0.723106</td>
-      <td>0.698146</td>
-      <td>0.035752</td>
-      <td>False</td>
-      <td>89.404190</td>
-      <td>1.685853</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>53</th>
-      <td>53</td>
-      <td>0.267535</td>
-      <td>0.807048</td>
-      <td>0.698146</td>
-      <td>0.155988</td>
-      <td>False</td>
-      <td>91.091477</td>
-      <td>1.687187</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>54</th>
-      <td>54</td>
-      <td>0.280462</td>
-      <td>0.849552</td>
-      <td>0.698146</td>
-      <td>0.216868</td>
-      <td>False</td>
-      <td>92.778957</td>
-      <td>1.687388</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>55</th>
-      <td>55</td>
-      <td>0.190594</td>
-      <td>0.745547</td>
-      <td>0.698146</td>
-      <td>0.067894</td>
-      <td>False</td>
-      <td>94.469572</td>
-      <td>1.690524</td>
-      <td>19836928</td>
-      <td>106954752</td>
-    </tr>
-    <tr>
-      <th>56</th>
-      <td>56</td>
-      <td>0.190790</td>
-      <td>0.772287</td>
-      <td>0.698146</td>
-      <td>0.106197</td>
-      <td>False</td>
-      <td>96.157276</td>
-      <td>1.687604</td>
-      <td>19836928</td>
-      <td>106954752</td>
+      <td>78.075494</td>
+      <td>1.687214</td>
+      <td>73597440</td>
+      <td>159383552</td>
     </tr>
   </tbody>
 </table>
@@ -14957,7 +14815,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>48</pre>
+<pre>37</pre>
 </div>
 
 </div>
@@ -14998,6 +14856,14 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Note-on-Reweighting">Note on Reweighting<a class="anchor-link" href="#Note-on-Reweighting">&#182;</a></h3><p>We must reweight the confusion matrix to account for different numbers of samples coming from each parent EKG. This avoids biasing the results in favor of longer recordings which generated more samples in the preprocessing steps.</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[37]:</div>
@@ -15011,7 +14877,13 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
     <span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;is_correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">dfp</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="s1">&#39;is_correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="n">dfp</span> <span class="o">=</span> <span class="n">massage_dfp</span><span class="p">(</span><span class="n">dfp</span><span class="p">,</span> <span class="n">target_fixed_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;pred&#39;</span><span class="p">,</span> <span class="s1">&#39;is_correct&#39;</span><span class="p">,</span> <span class="s1">&#39;fname&#39;</span><span class="p">],</span>
+    <span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;parent_ekg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-s\d</span><span class="si">{2}</span><span class="s1">_PIL\.png&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;parent_ekg_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfp</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;parent_ekg&#39;</span><span class="p">])[</span><span class="s1">&#39;parent_ekg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">)</span>
+    <span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">dfp</span><span class="p">[</span><span class="s1">&#39;parent_ekg_count&#39;</span><span class="p">]</span>
+
+    <span class="n">dfp</span> <span class="o">=</span> <span class="n">dfp</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;parent_ekg&#39;</span><span class="p">,</span> <span class="s1">&#39;parent_ekg_count&#39;</span><span class="p">])</span>
+
+    <span class="n">dfp</span> <span class="o">=</span> <span class="n">massage_dfp</span><span class="p">(</span><span class="n">dfp</span><span class="p">,</span> <span class="n">target_fixed_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;pred&#39;</span><span class="p">,</span> <span class="s1">&#39;is_correct&#39;</span><span class="p">,</span> <span class="s1">&#39;fname&#39;</span><span class="p">,</span> <span class="s1">&#39;weight&#39;</span><span class="p">],</span>
                       <span class="n">sort_by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;is_correct&#39;</span><span class="p">,</span> <span class="s1">&#39;pred&#39;</span><span class="p">,</span> <span class="s1">&#39;fname&#39;</span><span class="p">],</span> <span class="n">sort_by_ascending</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">dfp</span>
@@ -15088,6 +14960,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
       <th>pred</th>
       <th>is_correct</th>
       <th>fname</th>
+      <th>weight</th>
     </tr>
   </thead>
   <tbody>
@@ -15097,34 +14970,39 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
       <td>0</td>
       <td>1</td>
       <td>A0007-s00_PIL.png</td>
+      <td>0.333333</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0007-s01_PIL.png</td>
+      <td>A0153-s00_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0007-s02_PIL.png</td>
+      <td>A0153-s01_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0153-s00_PIL.png</td>
+      <td>A0153-s02_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0153-s01_PIL.png</td>
+      <td>A0153-s03_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
       <th>...</th>
@@ -15132,45 +15010,51 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
       <td>...</td>
       <td>...</td>
       <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
-      <th>3334</th>
+      <th>3266</th>
       <td>6</td>
       <td>4</td>
       <td>0</td>
-      <td>A6414-s00_PIL.png</td>
+      <td>A4455-s01_PIL.png</td>
+      <td>0.333333</td>
     </tr>
     <tr>
-      <th>3335</th>
+      <th>3267</th>
+      <td>6</td>
+      <td>4</td>
+      <td>0</td>
+      <td>A4478-s02_PIL.png</td>
+      <td>0.333333</td>
+    </tr>
+    <tr>
+      <th>3268</th>
+      <td>6</td>
+      <td>4</td>
+      <td>0</td>
+      <td>A4541-s01_PIL.png</td>
+      <td>0.333333</td>
+    </tr>
+    <tr>
+      <th>3269</th>
+      <td>6</td>
+      <td>4</td>
+      <td>0</td>
+      <td>A4935-s05_PIL.png</td>
+      <td>0.111111</td>
+    </tr>
+    <tr>
+      <th>3270</th>
       <td>6</td>
       <td>5</td>
       <td>0</td>
-      <td>A0034-s01_PIL.png</td>
-    </tr>
-    <tr>
-      <th>3336</th>
-      <td>6</td>
-      <td>5</td>
-      <td>0</td>
-      <td>A4877-s00_PIL.png</td>
-    </tr>
-    <tr>
-      <th>3337</th>
-      <td>6</td>
-      <td>5</td>
-      <td>0</td>
-      <td>A4877-s01_PIL.png</td>
-    </tr>
-    <tr>
-      <th>3338</th>
-      <td>6</td>
-      <td>5</td>
-      <td>0</td>
-      <td>A4877-s02_PIL.png</td>
+      <td>A2304-s02_PIL.png</td>
+      <td>0.333333</td>
     </tr>
   </tbody>
 </table>
-<p>3339 rows × 4 columns</p>
+<p>3271 rows × 5 columns</p>
 </div>
 </div>
 
@@ -15185,7 +15069,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
 <div class="prompt input_prompt">In&nbsp;[40]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">conf_matrix_val</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">dfp_preds_val</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">dfp_preds_val</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">conf_matrix_val</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">dfp_preds_val</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">dfp_preds_val</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">dfp_preds_val</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
 </pre></div>
 
     </div>
@@ -15203,7 +15087,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
     <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix_val</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
                           <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                           <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">weighted</span><span class="o">=</span><span class="ow">not</span> <span class="n">norm</span><span class="p">,</span>
                          <span class="p">)</span>
 </pre></div>
 
@@ -15278,6 +15162,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
       <th>pred</th>
       <th>is_correct</th>
       <th>fname</th>
+      <th>weight</th>
     </tr>
   </thead>
   <tbody>
@@ -15287,34 +15172,39 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
       <td>0</td>
       <td>1</td>
       <td>A0004-s01_PIL.png</td>
+      <td>0.333333</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0220-s00_PIL.png</td>
+      <td>A0004-s02_PIL.png</td>
+      <td>0.333333</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0235-s01_PIL.png</td>
+      <td>A0220-s00_PIL.png</td>
+      <td>0.125000</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0376-s00_PIL.png</td>
+      <td>A0220-s01_PIL.png</td>
+      <td>0.125000</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
       <td>0</td>
       <td>1</td>
-      <td>A0415-s03_PIL.png</td>
+      <td>A0220-s02_PIL.png</td>
+      <td>0.125000</td>
     </tr>
     <tr>
       <th>...</th>
@@ -15322,45 +15212,51 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
       <td>...</td>
       <td>...</td>
       <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
-      <th>779</th>
+      <th>3306</th>
       <td>6</td>
-      <td>3</td>
+      <td>5</td>
       <td>0</td>
-      <td>A5863-s01_PIL.png</td>
+      <td>A0930-s02_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
-      <th>780</th>
+      <th>3307</th>
       <td>6</td>
-      <td>4</td>
+      <td>5</td>
       <td>0</td>
-      <td>A1479-s02_PIL.png</td>
+      <td>A0930-s03_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
-      <th>781</th>
+      <th>3308</th>
       <td>6</td>
-      <td>4</td>
+      <td>5</td>
       <td>0</td>
-      <td>A1802-s02_PIL.png</td>
+      <td>A1479-s05_PIL.png</td>
+      <td>0.100000</td>
     </tr>
     <tr>
-      <th>782</th>
+      <th>3309</th>
       <td>6</td>
-      <td>4</td>
+      <td>5</td>
       <td>0</td>
-      <td>A1839-s00_PIL.png</td>
+      <td>A5106-s02_PIL.png</td>
+      <td>0.250000</td>
     </tr>
     <tr>
-      <th>783</th>
+      <th>3310</th>
       <td>6</td>
-      <td>4</td>
+      <td>5</td>
       <td>0</td>
-      <td>A4200-s01_PIL.png</td>
+      <td>A5106-s03_PIL.png</td>
+      <td>0.250000</td>
     </tr>
   </tbody>
 </table>
-<p>784 rows × 4 columns</p>
+<p>3311 rows × 5 columns</p>
 </div>
 </div>
 
@@ -15375,7 +15271,7 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
 <div class="prompt input_prompt">In&nbsp;[44]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">conf_matrix_test</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">conf_matrix_test</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
 </pre></div>
 
     </div>
@@ -15393,11 +15289,432 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
     <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_matrix_test</span><span class="p">,</span> <span class="n">label_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
                           <span class="n">m_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                           <span class="n">ann_text_std_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+                          <span class="n">normalize</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">weighted</span><span class="o">=</span><span class="ow">not</span> <span class="n">norm</span><span class="p">,</span>
                          <span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Model-Description">Model Description<a class="anchor-link" href="#Model-Description">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[46]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;model_summary.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">summary_str</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">summary_str</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+            Conv2d-1         [32, 16, 400, 400]             144
+       BatchNorm2d-2         [32, 16, 400, 400]              32
+             ReLU6-3         [32, 16, 400, 400]               0
+         h_sigmoid-4         [32, 16, 400, 400]               0
+           h_swish-5         [32, 16, 400, 400]               0
+            Conv2d-6         [32, 16, 200, 200]             144
+       BatchNorm2d-7         [32, 16, 200, 200]              32
+              ReLU-8         [32, 16, 200, 200]               0
+ AdaptiveAvgPool2d-9             [32, 16, 1, 1]               0
+           Linear-10                    [32, 8]             136
+             ReLU-11                    [32, 8]               0
+           Linear-12                   [32, 16]             144
+            ReLU6-13                   [32, 16]               0
+        h_sigmoid-14                   [32, 16]               0
+          SELayer-15         [32, 16, 200, 200]               0
+           Conv2d-16          [32, 8, 200, 200]             128
+      BatchNorm2d-17          [32, 8, 200, 200]              16
+ InvertedResidual-18          [32, 8, 200, 200]               0
+           Conv2d-19         [32, 40, 200, 200]             320
+      BatchNorm2d-20         [32, 40, 200, 200]              80
+             ReLU-21         [32, 40, 200, 200]               0
+           Conv2d-22         [32, 40, 100, 100]             360
+      BatchNorm2d-23         [32, 40, 100, 100]              80
+         Identity-24         [32, 40, 100, 100]               0
+             ReLU-25         [32, 40, 100, 100]               0
+           Conv2d-26          [32, 8, 100, 100]             320
+      BatchNorm2d-27          [32, 8, 100, 100]              16
+ InvertedResidual-28          [32, 8, 100, 100]               0
+           Conv2d-29         [32, 32, 100, 100]             256
+      BatchNorm2d-30         [32, 32, 100, 100]              64
+             ReLU-31         [32, 32, 100, 100]               0
+           Conv2d-32         [32, 32, 100, 100]             288
+      BatchNorm2d-33         [32, 32, 100, 100]              64
+         Identity-34         [32, 32, 100, 100]               0
+             ReLU-35         [32, 32, 100, 100]               0
+           Conv2d-36          [32, 8, 100, 100]             256
+      BatchNorm2d-37          [32, 8, 100, 100]              16
+ InvertedResidual-38          [32, 8, 100, 100]               0
+           Conv2d-39         [32, 32, 100, 100]             256
+      BatchNorm2d-40         [32, 32, 100, 100]              64
+            ReLU6-41         [32, 32, 100, 100]               0
+        h_sigmoid-42         [32, 32, 100, 100]               0
+          h_swish-43         [32, 32, 100, 100]               0
+           Conv2d-44           [32, 32, 50, 50]             800
+      BatchNorm2d-45           [32, 32, 50, 50]              64
+AdaptiveAvgPool2d-46             [32, 32, 1, 1]               0
+           Linear-47                    [32, 8]             264
+             ReLU-48                    [32, 8]               0
+           Linear-49                   [32, 32]             288
+            ReLU6-50                   [32, 32]               0
+        h_sigmoid-51                   [32, 32]               0
+          SELayer-52           [32, 32, 50, 50]               0
+            ReLU6-53           [32, 32, 50, 50]               0
+        h_sigmoid-54           [32, 32, 50, 50]               0
+          h_swish-55           [32, 32, 50, 50]               0
+           Conv2d-56           [32, 16, 50, 50]             512
+      BatchNorm2d-57           [32, 16, 50, 50]              32
+ InvertedResidual-58           [32, 16, 50, 50]               0
+           Conv2d-59           [32, 96, 50, 50]           1,536
+      BatchNorm2d-60           [32, 96, 50, 50]             192
+            ReLU6-61           [32, 96, 50, 50]               0
+        h_sigmoid-62           [32, 96, 50, 50]               0
+          h_swish-63           [32, 96, 50, 50]               0
+           Conv2d-64           [32, 96, 50, 50]           2,400
+      BatchNorm2d-65           [32, 96, 50, 50]             192
+AdaptiveAvgPool2d-66             [32, 96, 1, 1]               0
+           Linear-67                   [32, 24]           2,328
+             ReLU-68                   [32, 24]               0
+           Linear-69                   [32, 96]           2,400
+            ReLU6-70                   [32, 96]               0
+        h_sigmoid-71                   [32, 96]               0
+          SELayer-72           [32, 96, 50, 50]               0
+            ReLU6-73           [32, 96, 50, 50]               0
+        h_sigmoid-74           [32, 96, 50, 50]               0
+          h_swish-75           [32, 96, 50, 50]               0
+           Conv2d-76           [32, 16, 50, 50]           1,536
+      BatchNorm2d-77           [32, 16, 50, 50]              32
+ InvertedResidual-78           [32, 16, 50, 50]               0
+           Conv2d-79           [32, 96, 50, 50]           1,536
+      BatchNorm2d-80           [32, 96, 50, 50]             192
+            ReLU6-81           [32, 96, 50, 50]               0
+        h_sigmoid-82           [32, 96, 50, 50]               0
+          h_swish-83           [32, 96, 50, 50]               0
+           Conv2d-84           [32, 96, 50, 50]           2,400
+      BatchNorm2d-85           [32, 96, 50, 50]             192
+AdaptiveAvgPool2d-86             [32, 96, 1, 1]               0
+           Linear-87                   [32, 24]           2,328
+             ReLU-88                   [32, 24]               0
+           Linear-89                   [32, 96]           2,400
+            ReLU6-90                   [32, 96]               0
+        h_sigmoid-91                   [32, 96]               0
+          SELayer-92           [32, 96, 50, 50]               0
+            ReLU6-93           [32, 96, 50, 50]               0
+        h_sigmoid-94           [32, 96, 50, 50]               0
+          h_swish-95           [32, 96, 50, 50]               0
+           Conv2d-96           [32, 32, 50, 50]           3,072
+      BatchNorm2d-97           [32, 32, 50, 50]              64
+ InvertedResidual-98           [32, 32, 50, 50]               0
+           Conv2d-99           [32, 96, 50, 50]           3,072
+     BatchNorm2d-100           [32, 96, 50, 50]             192
+           ReLU6-101           [32, 96, 50, 50]               0
+       h_sigmoid-102           [32, 96, 50, 50]               0
+         h_swish-103           [32, 96, 50, 50]               0
+          Conv2d-104           [32, 96, 50, 50]           2,400
+     BatchNorm2d-105           [32, 96, 50, 50]             192
+AdaptiveAvgPool2d-106             [32, 96, 1, 1]               0
+          Linear-107                   [32, 24]           2,328
+            ReLU-108                   [32, 24]               0
+          Linear-109                   [32, 96]           2,400
+           ReLU6-110                   [32, 96]               0
+       h_sigmoid-111                   [32, 96]               0
+         SELayer-112           [32, 96, 50, 50]               0
+           ReLU6-113           [32, 96, 50, 50]               0
+       h_sigmoid-114           [32, 96, 50, 50]               0
+         h_swish-115           [32, 96, 50, 50]               0
+          Conv2d-116           [32, 32, 50, 50]           3,072
+     BatchNorm2d-117           [32, 32, 50, 50]              64
+InvertedResidual-118           [32, 32, 50, 50]               0
+          Conv2d-119           [32, 96, 50, 50]           3,072
+     BatchNorm2d-120           [32, 96, 50, 50]             192
+           ReLU6-121           [32, 96, 50, 50]               0
+       h_sigmoid-122           [32, 96, 50, 50]               0
+         h_swish-123           [32, 96, 50, 50]               0
+AdaptiveAvgPool2d-124             [32, 96, 1, 1]               0
+          Linear-125                 [32, 1024]          99,328
+           ReLU6-126                 [32, 1024]               0
+       h_sigmoid-127                 [32, 1024]               0
+         h_swish-128                 [32, 1024]               0
+         Dropout-129                 [32, 1024]               0
+          Linear-130                    [32, 7]           7,175
+     MobileNetV3-131                    [32, 7]               0
+================================================================
+Total params: 151,463
+Trainable params: 151,463
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 78.12
+Forward/backward pass size (MB): 9122.74
+Params size (MB): 0.58
+Estimated Total Size (MB): 9201.45
+----------------------------------------------------------------
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[47]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_path</span><span class="p">,</span> <span class="s1">&#39;model_eval.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">model_eval_str</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">model_eval_str</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>&lt;bound method Module.eval of MobileNetV3(
+  (features): Sequential(
+    (0): Sequential(
+      (0): Conv2d(1, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): h_swish(
+        (sigmoid): h_sigmoid(
+          (relu): ReLU6(inplace=True)
+        )
+      )
+    )
+    (1): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=16, bias=False)
+        (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): SELayer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (fc): Sequential(
+            (0): Linear(in_features=16, out_features=8, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=8, out_features=16, bias=True)
+            (3): h_sigmoid(
+              (relu): ReLU6(inplace=True)
+            )
+          )
+        )
+        (4): Conv2d(16, 8, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (5): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (2): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(8, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(40, 40, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=40, bias=False)
+        (4): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): Identity()
+        (6): ReLU(inplace=True)
+        (7): Conv2d(40, 8, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (8): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (3): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(8, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+        (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): Identity()
+        (6): ReLU(inplace=True)
+        (7): Conv2d(32, 8, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (8): BatchNorm2d(8, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (4): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(8, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (3): Conv2d(32, 32, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=32, bias=False)
+        (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): SELayer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (fc): Sequential(
+            (0): Linear(in_features=32, out_features=8, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=8, out_features=32, bias=True)
+            (3): h_sigmoid(
+              (relu): ReLU6(inplace=True)
+            )
+          )
+        )
+        (6): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (7): Conv2d(32, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (8): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (5): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(16, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (3): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96, bias=False)
+        (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): SELayer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (fc): Sequential(
+            (0): Linear(in_features=96, out_features=24, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=24, out_features=96, bias=True)
+            (3): h_sigmoid(
+              (relu): ReLU6(inplace=True)
+            )
+          )
+        )
+        (6): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (7): Conv2d(96, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (8): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (6): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(16, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (3): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96, bias=False)
+        (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): SELayer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (fc): Sequential(
+            (0): Linear(in_features=96, out_features=24, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=24, out_features=96, bias=True)
+            (3): h_sigmoid(
+              (relu): ReLU6(inplace=True)
+            )
+          )
+        )
+        (6): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (7): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (8): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (7): InvertedResidual(
+      (conv): Sequential(
+        (0): Conv2d(32, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (3): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96, bias=False)
+        (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): SELayer(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (fc): Sequential(
+            (0): Linear(in_features=96, out_features=24, bias=True)
+            (1): ReLU(inplace=True)
+            (2): Linear(in_features=24, out_features=96, bias=True)
+            (3): h_sigmoid(
+              (relu): ReLU6(inplace=True)
+            )
+          )
+        )
+        (6): h_swish(
+          (sigmoid): h_sigmoid(
+            (relu): ReLU6(inplace=True)
+          )
+        )
+        (7): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (8): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (conv): Sequential(
+    (0): Conv2d(32, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): h_swish(
+      (sigmoid): h_sigmoid(
+        (relu): ReLU6(inplace=True)
+      )
+    )
+  )
+  (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+  (classifier): Sequential(
+    (0): Linear(in_features=96, out_features=1024, bias=True)
+    (1): h_swish(
+      (sigmoid): h_sigmoid(
+        (relu): ReLU6(inplace=True)
+      )
+    )
+    (2): Dropout(p=0.2, inplace=False)
+    (3): Linear(in_features=1024, out_features=7, bias=True)
+  )
+)&gt;
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -15422,46 +15739,6 @@ Class Counts Weighted: tensor([26.0000, 26.0000, 26.0000, 26.0000, 26.0000, 26.0
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Model-Description">Model Description<a class="anchor-link" href="#Model-Description">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">summary_str</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">model_eval_str</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Memory-Debugging">Memory Debugging<a class="anchor-link" href="#Memory-Debugging">&#182;</a></h3>
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
