@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	parser.add_argument('--test_frac', dest='test_frac', type=float, default=0.15, help='Fraction of files to place in test, default is 0.15.')
 	parser.add_argument('--val_frac', dest='val_frac', type=float, default=0.15, help='Fraction of files to place in val, default is 0.15.')
 	parser.add_argument('--bywave', dest='by_waveform', action='count', default=1, help='Divide files between train, val, test sets according to the parent waveform, rather than each individual sample.')
-	parser.add_argument('--singlesampletest', dest='single_sample_test', action='count', default=1, help='Only return one sample image at random per waveform in the test set.')
+	parser.add_argument('--singlesampletest', dest='single_sample_test', action='count', default=0, help='Only return one sample image at random per waveform in the test set.')
 	parser.add_argument('-s', '--size', dest='im_res', type=int, default=800, help='Size of image, only used to easily modify the default input_path.')
 	parser.add_argument('--extension', dest='ext', type=str, default='png', help='File extension to process, others are ignored. Default is png.')
 	parser.add_argument('--seed', dest='rnd_seed', type=int, default=44, help='Random seed for reproducibility.')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 	if by_waveform:
 		class_waveforms = {}
 		for c,v in class_files.items():
-			waveforms = [re.sub(f'-s.._PIL.{ext}', '', f) for f in v['fnames']]
+			waveforms = [re.sub(f'-s\d{2}_PIL\.{ext}', '', f) for f in v['fnames']]
 			class_waveforms[c] = {'class_path': v['class_path'],'waveforms': natsorted(list(set(waveforms)))}
 
 	# set min n_per_class from the smallest class, if n_per_class is -1
