@@ -15723,6 +15723,324 @@ Estimated Total Size (MB): 9201.45
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <hr>
+<h1 id="Compute-Accuracy,-F1-Scores-per-Class">Compute Accuracy, F1 Scores per Class<a class="anchor-link" href="#Compute-Accuracy,-F1-Scores-per-Class">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[26]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">idx_to_class</span> <span class="o">=</span> <span class="p">{</span>
+<span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;AF&#39;</span><span class="p">,</span>
+<span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;I-AVB&#39;</span><span class="p">,</span>
+<span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;LBBB&#39;</span><span class="p">,</span>
+<span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;Normal&#39;</span><span class="p">,</span>
+<span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;RBBB&#39;</span><span class="p">,</span>
+<span class="mi">5</span><span class="p">:</span> <span class="s1">&#39;STD&#39;</span><span class="p">,</span>
+<span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;STE&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">class_to_idx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([[</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">idx_to_class</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Test-Set">Test Set<a class="anchor-link" href="#Test-Set">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_preds_test</span> <span class="o">=</span> <span class="n">load_dfp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/mount_sinai_health_hackathon_ekg_img/modeling/SAVED_RESULTS/2020-07-16_mobilenetv3_small_custom_800_best/output&#39;</span><span class="p">),</span> <span class="s1">&#39;preds&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;_test&#39;</span><span class="p">,</span> <span class="n">cols_str</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fname&#39;</span><span class="p">],</span> <span class="n">cols_float</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfp_preds_test</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[28]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>pred</th>
+      <th>is_correct</th>
+      <th>fname</th>
+      <th>weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>A0004-s01_PIL.png</td>
+      <td>0.333333</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>A0004-s02_PIL.png</td>
+      <td>0.333333</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>A0220-s00_PIL.png</td>
+      <td>0.125000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>A0220-s01_PIL.png</td>
+      <td>0.125000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>A0220-s02_PIL.png</td>
+      <td>0.125000</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>3306</th>
+      <td>6</td>
+      <td>5</td>
+      <td>0</td>
+      <td>A0930-s02_PIL.png</td>
+      <td>0.250000</td>
+    </tr>
+    <tr>
+      <th>3307</th>
+      <td>6</td>
+      <td>5</td>
+      <td>0</td>
+      <td>A0930-s03_PIL.png</td>
+      <td>0.250000</td>
+    </tr>
+    <tr>
+      <th>3308</th>
+      <td>6</td>
+      <td>5</td>
+      <td>0</td>
+      <td>A1479-s05_PIL.png</td>
+      <td>0.100000</td>
+    </tr>
+    <tr>
+      <th>3309</th>
+      <td>6</td>
+      <td>5</td>
+      <td>0</td>
+      <td>A5106-s02_PIL.png</td>
+      <td>0.250000</td>
+    </tr>
+    <tr>
+      <th>3310</th>
+      <td>6</td>
+      <td>5</td>
+      <td>0</td>
+      <td>A5106-s03_PIL.png</td>
+      <td>0.250000</td>
+    </tr>
+  </tbody>
+</table>
+<p>3311 rows × 5 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[37]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">classification_report</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Classification Report</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">classification_report</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span> <span class="n">target_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">digits</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+Classification Report
+
+              precision    recall  f1-score   support
+
+      Normal      0.710     0.679     0.694 137.00000000000006
+          AF      0.907     0.870     0.888 145.99999999999972
+       I-AVB      0.712     0.857     0.778 102.00000000000006
+        LBBB      0.711     0.853     0.775 25.999999999999996
+        RBBB      0.892     0.826     0.858 229.00000000000065
+         STD      0.728     0.731     0.729 116.99999999999996
+         STE      0.525     0.572     0.547 26.999999999999982
+
+    accuracy                          0.790 784.0000000000005
+   macro avg      0.741     0.770     0.753 784.0000000000005
+weighted avg      0.796     0.790     0.792 784.0000000000005
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[38]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">classification_report</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">],</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">dfp_preds_test</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">class_to_idx</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span> <span class="n">target_names</span><span class="o">=</span><span class="n">Dx_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">digits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">output_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[38]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Normal&#39;: {&#39;precision&#39;: 0.7095213163573207,
+  &#39;recall&#39;: 0.6790783223264978,
+  &#39;f1-score&#39;: 0.6939661105248599,
+  &#39;support&#39;: 137.00000000000006},
+ &#39;AF&#39;: {&#39;precision&#39;: 0.9065493579726872,
+  &#39;recall&#39;: 0.8704174820613165,
+  &#39;f1-score&#39;: 0.8881160770741112,
+  &#39;support&#39;: 145.99999999999972},
+ &#39;I-AVB&#39;: {&#39;precision&#39;: 0.7119610912054251,
+  &#39;recall&#39;: 0.8565359477124189,
+  &#39;f1-score&#39;: 0.7775854883484398,
+  &#39;support&#39;: 102.00000000000006},
+ &#39;LBBB&#39;: {&#39;precision&#39;: 0.7107864968379806,
+  &#39;recall&#39;: 0.8525641025641029,
+  &#39;f1-score&#39;: 0.7752465147908881,
+  &#39;support&#39;: 25.999999999999996},
+ &#39;RBBB&#39;: {&#39;precision&#39;: 0.892211083039455,
+  &#39;recall&#39;: 0.8255302557704289,
+  &#39;f1-score&#39;: 0.8575764312606932,
+  &#39;support&#39;: 229.00000000000065},
+ &#39;STD&#39;: {&#39;precision&#39;: 0.7278168871353484,
+  &#39;recall&#39;: 0.7307692307692317,
+  &#39;f1-score&#39;: 0.729290071013208,
+  &#39;support&#39;: 116.99999999999996},
+ &#39;STE&#39;: {&#39;precision&#39;: 0.5248230774415316,
+  &#39;recall&#39;: 0.5722222222222226,
+  &#39;f1-score&#39;: 0.5474986816663739,
+  &#39;support&#39;: 26.999999999999982},
+ &#39;accuracy&#39;: 0.7903628117913839,
+ &#39;macro avg&#39;: {&#39;precision&#39;: 0.7405241871413927,
+  &#39;recall&#39;: 0.7695882233466028,
+  &#39;f1-score&#39;: 0.7527541963826535,
+  &#39;support&#39;: 784.0000000000005},
+ &#39;weighted avg&#39;: {&#39;precision&#39;: 0.7963038823054828,
+  &#39;recall&#39;: 0.790362811791383,
+  &#39;f1-score&#39;: 0.7917128049273804,
+  &#39;support&#39;: 784.0000000000005}}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
 <h1 id="Dev">Dev<a class="anchor-link" href="#Dev">&#182;</a></h1>
 </div>
 </div>

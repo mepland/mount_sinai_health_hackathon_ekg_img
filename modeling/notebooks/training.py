@@ -760,6 +760,53 @@ with open(os.path.join(models_path, 'model_eval.txt'), 'r') as f:
 
 
 # ***
+# # Compute Accuracy, F1 Scores per Class
+
+# In[26]:
+
+
+idx_to_class = {
+0: 'AF',
+1: 'I-AVB',
+2: 'LBBB',
+3: 'Normal',
+4: 'RBBB',
+5: 'STD',
+6: 'STE',
+}
+class_to_idx = dict([[v,k] for k,v in idx_to_class.items()])
+
+
+# #### Test Set
+
+# In[27]:
+
+
+dfp_preds_test = load_dfp(os.path.expanduser('~/mount_sinai_health_hackathon_ekg_img/modeling/SAVED_RESULTS/2020-07-16_mobilenetv3_small_custom_800_best/output'), 'preds', tag='_test', cols_str=['fname'], cols_float=['weight'])
+
+
+# In[28]:
+
+
+dfp_preds_test
+
+
+# In[37]:
+
+
+from sklearn.metrics import classification_report
+
+print('\nClassification Report\n')
+print(classification_report(y_true=dfp_preds_test['label'], y_pred=dfp_preds_test['pred'], sample_weight=dfp_preds_test['weight'], labels=[class_to_idx[k] for k in Dx_classes.keys()], target_names=Dx_classes.keys(), digits=3))
+
+
+# In[38]:
+
+
+classification_report(y_true=dfp_preds_test['label'], y_pred=dfp_preds_test['pred'], sample_weight=dfp_preds_test['weight'], labels=[class_to_idx[k] for k in Dx_classes.keys()], target_names=Dx_classes.keys(), digits=3, output_dict=True)
+
+
+# ***
 # # Dev
 
 # In[ ]:
