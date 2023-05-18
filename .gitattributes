@@ -1,0 +1,7 @@
+# ignore all html in diffs and github languages stats
+*.html linguist-generated=true
+# ignore specific .py files linked to jupyter notebooks in github languages stats
+modeling/notebooks/graph_model.py linguist-documentation=true
+modeling/notebooks/training.py linguist-documentation=true
+modeling/old/mt_sinai_health_hackathon.py linguist-documentation=true
+preprocessing/dev_preproc.py linguist-documentation=true
