@@ -1,13 +1,15 @@
 # Mount Sinai Health Hackathon EKG Imaging Project
 
 # 2023 Paper
-Following the [October 2019 weekend hackathon](https://events.mountsinaihealth.org/event/healthhackathon),
+[![DOI:10.1016/j.cpcardiol.2023.101744](http://img.shields.io/badge/DOI-10.1016/j.cpcardiol.2023.101744-f56100.svg)](https://doi.org/10.1016/j.cpcardiol.2023.101744)
+
+Following the October 2019 weekend hackathon,
 Subrat Das and Matthew Epland resumed work on this project in May 2020.
 The model was switched to an austere variation of MobileNetV3,
 designed to be small enough to fit in the memory of a RTX 2080Ti GPU available to the authors.
 After a lengthy publication process,
 this work was finally published in April 2023 as
-"**[Interpretation of EKG with Image Recognition and Convolutional Neural Networks](https://doi.org/10.1016/j.cpcardiol.2023.101744)**"
+"Interpretation of EKG with Image Recognition and Convolutional Neural Networks"
 in Current Problems in Cardiology,
 with assistance from Jiang Yu
 and supervision by Professor Ranjit Suri.
@@ -26,7 +28,14 @@ The trained MobileNetV3 model and associated performance metrics can be found in
 [best_model_for_paper/2020-07-16_mobilenetv3_small_custom_800_best](best_model_for_paper/2020-07-16_mobilenetv3_small_custom_800_best)
 directory.
 
-# 2019 Hackathon
+## Paper Data
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7972397.svg)](https://doi.org/10.5281/zenodo.7972397)
+
+Original Waveforms:
+- [PhysioNet Challenge 2020](https://physionet.org/content/challenge-2020/1.0.2/#files)
+- [China Physiological Signal Challenge 2018](http://2018.icbeb.org/Challenge.html)
+
+# [2019 Mount Sinai Health Hackathon](https://events.mountsinaihealth.org/event/healthhackathon)
 
 ## Hackathon Team Members
 - Cole McCollum
